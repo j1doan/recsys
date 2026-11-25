@@ -6,9 +6,9 @@
 import gzip, json, os
 from collections import Counter
 import pandas as pd
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv()
+load_dotenv(find_dotenv("secret.env", usecwd=True))
 PATH = os.environ["GOODREADS_PATH"]
 LIMIT = None  # set e.g. 50_000 for a quick pass
 
