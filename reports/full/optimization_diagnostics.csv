@@ -1,0 +1,9 @@
+candidate,classifier,max_solver_iterations,median_solver_iterations,coefficient_bytes,convergence_warning
+word_lr_balanced_C1,LogisticRegression,9,8.0,6000000,False
+word_lr_balanced_C025,LogisticRegression,8,7.0,6000000,False
+word_lr_balanced_C4,LogisticRegression,10,9.0,6000000,False
+word_lr_unweighted_C1,LogisticRegression,16,12.0,6000000,False
+word_svm_C025,LinearSVC,62,15.0,6000000,False
+word_svm_C1,LinearSVC,315,167.0,6000000,False
+wordchar_lr_C1,LogisticRegression,9,8.0,13200000,False
+wordchar_svm_C1,LinearSVC,503,223.0,13200000,False

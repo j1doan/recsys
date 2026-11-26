@@ -1,0 +1,35 @@
+{
+  "main_task": "retain original 15 labels for continuity with group work",
+  "auxiliary_task": "OR positive indicators of the three predeclared alias pairs",
+  "merged_labels": [
+    "m-m",
+    "historical",
+    "paranormal",
+    "contemporary",
+    "chick-lit",
+    "new-adult",
+    "young-adult",
+    "erotica",
+    "bdsm",
+    "manga",
+    "romantic-suspense",
+    "fantasy"
+  ],
+  "aliases": {
+    "historical-romance": "historical",
+    "contemporary-romance": "contemporary",
+    "paranormal-romance": "paranormal"
+  },
+  "validation_metrics": {
+    "micro_f1": 0.5418565484446206,
+    "macro_f1": 0.5120006511413472,
+    "macro_auc": 0.9411938455141948,
+    "macro_ap": 0.4595546887543506,
+    "micro_precision": 0.47363179771388986,
+    "micro_recall": 0.6330439814814814,
+    "predicted_labels_per_book": 0.48432486841277494,
+    "auc_valid_labels": 12
+  },
+  "fit_seconds": 330.91294871399987,
+  "caveat": "Broader labels change the target; the F1 difference is not a model improvement."
+}

@@ -1,0 +1,35 @@
+{
+  "test_books": 60131,
+  "excluded_seen_text_books": 279,
+  "selected": {
+    "micro_f1": 0.503593926027006,
+    "macro_f1": 0.48416588930092325,
+    "macro_auc": 0.934493875986943,
+    "macro_ap": 0.4397035435430426,
+    "micro_precision": 0.43191529898478537,
+    "micro_recall": 0.6037972757020014,
+    "predicted_labels_per_book": 0.6110159485124146,
+    "auc_valid_labels": 15
+  },
+  "reference_default": {
+    "micro_f1": 0.4651653295243689,
+    "macro_f1": 0.4414439835407868,
+    "macro_auc": 0.9285947711432587,
+    "macro_ap": 0.4139894674205962,
+    "micro_precision": 0.35828415143227293,
+    "micro_recall": 0.6629251959516018,
+    "predicted_labels_per_book": 0.8087176331675842,
+    "auc_valid_labels": 15
+  },
+  "reference_tuned": {
+    "micro_f1": 0.48304538421866944,
+    "macro_f1": 0.461747490103886,
+    "macro_auc": 0.9285947711432587,
+    "macro_ap": 0.4139894674205962,
+    "micro_precision": 0.4190012861376726,
+    "micro_recall": 0.570200136975877,
+    "predicted_labels_per_book": 0.5948013503849927,
+    "auc_valid_labels": 15
+  },
+  "note": "Diagnostic subset only; not a separately retrained deduplicated benchmark."
+}

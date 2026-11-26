@@ -1,0 +1,301 @@
+shelf,direction,rank,feature,coefficient
+m-m,positive,1,char__ his ,9.724308428248913
+m-m,positive,2,word__gay,9.159181343107955
+m-m,positive,3,char__ his,9.15521278303173
+m-m,positive,4,char__ he ,7.687926160473024
+m-m,positive,5,word__man,7.4390558047189534
+m-m,positive,6,char__his ,7.285113982740475
+m-m,positive,7,word__men,7.2103546720255345
+m-m,positive,8,char__ hi,7.16685818887435
+m-m,positive,9,char__his,6.720890928271221
+m-m,positive,10,char__ he',6.173608552085421
+m-m,positive,11,word__lover,6.004758266749762
+m-m,positive,12,char__ he's,5.460065452054639
+m-m,negative,1,char__ her,-26.897488243744824
+m-m,negative,2,char__ her ,-26.51135834648876
+m-m,negative,3,char__ she,-22.018450674043205
+m-m,negative,4,char__she ,-20.648685949123536
+m-m,negative,5,char__ she ,-20.617391837577188
+m-m,negative,6,char__she,-19.877768595677736
+m-m,negative,7,char__her ,-17.96167531872797
+m-m,negative,8,word__woman,-16.532898070320556
+historical-romance,positive,1,word__lady,7.951174739581744
+historical-romance,positive,2,word__earl,7.42454171467913
+historical-romance,positive,3,word__duke,7.2835296158102585
+historical-romance,positive,4,word__londres,6.064223249330256
+historical-romance,positive,5,word__dama,5.54534102765237
+historical-romance,positive,6,word__lord,5.446624421485806
+historical-romance,positive,7,word__historical,5.230305774914793
+historical-romance,positive,8,word__cynster,5.054351683511537
+historical-romance,positive,9,word__passion,5.02743262841925
+historical-romance,positive,10,word__bridgerton,4.98950255091374
+historical-romance,positive,11,word__london,4.907191591533149
+historical-romance,positive,12,word__duque,4.810758624672755
+historical-romance,negative,1,word__sexy,-6.309572931875882
+historical-romance,negative,2,word__sex,-4.5546644316652
+historical-romance,negative,3,word__human,-4.492544042288314
+historical-romance,negative,4,word__hot,-4.249066930468447
+historical-romance,negative,5,word__ex,-4.186507182617395
+historical-romance,negative,6,word__vampire,-4.136800893522259
+historical-romance,negative,7,word__mate,-4.070685413578818
+historical-romance,negative,8,word__gorgeous,-4.0047520811335
+paranormal,positive,1,word__paranormal,8.56669482483735
+paranormal,positive,2,word__vampir,7.058477748660826
+paranormal,positive,3,word__psychic,5.636911112278261
+paranormal,positive,4,word__centuries,5.312619812697162
+paranormal,positive,5,word__mate,5.276668197973147
+paranormal,positive,6,word__vane,5.177507008575725
+paranormal,positive,7,char__vamp,5.175170445395352
+paranormal,positive,8,word__vampiro,5.027210579081935
+paranormal,positive,9,char__vam,5.0009726332847295
+paranormal,positive,10,word__ghostwalker,4.94950965617115
+paranormal,positive,11,word__sea haven,4.815938211874825
+paranormal,positive,12,char__ vamp,4.814683099499208
+paranormal,negative,1,word__gay,-5.263890680495253
+paranormal,negative,2,word__lady,-4.202370099783537
+paranormal,negative,3,word__love,-3.613234670177198
+paranormal,negative,4,word__ranch,-3.4943202739747097
+paranormal,negative,5,word__omega,-3.357355150691385
+paranormal,negative,6,word__marriage,-3.3163469474222445
+paranormal,negative,7,word__lucy,-3.238715541155393
+paranormal,negative,8,word__blake,-3.179501117342519
+historical,positive,1,word__cynster,6.6733745132035684
+historical,positive,2,word__london,6.636784205259399
+historical,positive,3,word__londres,6.3790810083492655
+historical,positive,4,char__ . ,6.377090522746035
+historical,positive,5,word__tatiana,5.769871062579412
+historical,positive,6,word__duke,5.588150748244
+historical,positive,7,word__war,5.541854296803493
+historical,positive,8,word__lady,5.31330299306487
+historical,positive,9,word__dama,5.193142678020972
+historical,positive,10,word__hathaway,4.98383261442584
+historical,positive,11,word__earl,4.954373238954526
+historical,positive,12,word__historical,4.6494364257923495
+historical,negative,1,word__sexy,-5.815702616924442
+historical,negative,2,word__ex,-4.06715152682875
+historical,negative,3,word__darcy,-3.6971911493395306
+historical,negative,4,word__gorgeous,-3.4542350646697293
+historical,negative,5,word__mate,-3.3940088479139994
+historical,negative,6,word__dr,-3.36939935446669
+historical,negative,7,word__billionaire,-3.264610985529372
+historical,negative,8,word__college,-3.244260466759974
+contemporary-romance,positive,1,word__virgin river,8.7844324893864
+contemporary-romance,positive,2,word__fool gold,7.147794095669444
+contemporary-romance,positive,3,word__idaho,6.9124901579493105
+contemporary-romance,positive,4,word__gansett,6.327448704563371
+contemporary-romance,positive,5,word__lucky harbor,5.888260600067845
+contemporary-romance,positive,6,word__lear,5.790992770459942
+contemporary-romance,positive,7,word__eternity springs,5.748292802591364
+contemporary-romance,positive,8,word__chicago stars,5.701163794211117
+contemporary-romance,positive,9,word__vermont,5.697422906432601
+contemporary-romance,positive,10,char__ . ,4.965873163509361
+contemporary-romance,positive,11,word__theresa,4.915277481581211
+contemporary-romance,positive,12,word__sexy,4.748248550290962
+contemporary-romance,negative,1,word__lord,-5.595225982668949
+contemporary-romance,negative,2,word__gay,-5.395112236095679
+contemporary-romance,negative,3,word__lady,-4.72826604069601
+contemporary-romance,negative,4,word__college,-4.429913783152688
+contemporary-romance,negative,5,word__london,-4.301932988598523
+contemporary-romance,negative,6,word__vampire,-4.01745850185399
+contemporary-romance,negative,7,word__earl,-3.9031218875326363
+contemporary-romance,negative,8,word__master,-3.721513407927457
+paranormal-romance,positive,1,word__vampir,7.072697710757783
+paranormal-romance,positive,2,word__centuries,6.755199219673701
+paranormal-romance,positive,3,word__ghostwalker,6.08848567658387
+paranormal-romance,positive,4,word__demon,5.805683571510326
+paranormal-romance,positive,5,word__psychic,5.631619383820387
+paranormal-romance,positive,6,word__shiftertown,5.5694596461644075
+paranormal-romance,positive,7,word__wyr,5.525391387772393
+paranormal-romance,positive,8,word__der,5.356103335256767
+paranormal-romance,positive,9,word__vampiro,5.238462978628053
+paranormal-romance,positive,10,char__vamp,5.179334915431629
+paranormal-romance,positive,11,word__argeneau,5.147194108333774
+paranormal-romance,positive,12,word__paranormal,5.063398114459429
+paranormal-romance,negative,1,word__girl,-5.037141167896911
+paranormal-romance,negative,2,word__lady,-4.946979812703465
+paranormal-romance,negative,3,word__follow,-4.1684777518072975
+paranormal-romance,negative,4,word__hard,-3.545611066288286
+paranormal-romance,negative,5,word__ship,-3.429157722457418
+paranormal-romance,negative,6,word__blake,-3.4041768247791944
+paranormal-romance,negative,7,word__gay,-3.3776058867076815
+paranormal-romance,negative,8,word__club,-3.2059936703042364
+contemporary,positive,1,word__lina,6.507716984850047
+contemporary,positive,2,word__idaho,5.895638873960314
+contemporary,positive,3,word__lucky harbor,5.788199384315061
+contemporary,positive,4,word__chicago stars,5.69036141558532
+contemporary,positive,5,word__etienne,5.607435829704814
+contemporary,positive,6,word__allyson,5.430935972714321
+contemporary,positive,7,word__neal,5.398111388845262
+contemporary,positive,8,word__virgin river,5.281026124333442
+contemporary,positive,9,word__hadley,5.273570208963425
+contemporary,positive,10,word__coulter,5.140977119558432
+contemporary,positive,11,word__dictionary,5.048299619753954
+contemporary,positive,12,word__lennie,5.047516510652035
+contemporary,negative,1,word__lord,-5.773250060916015
+contemporary,negative,2,word__london,-3.9463625566997296
+contemporary,negative,3,word__vampire,-3.9338213982050063
+contemporary,negative,4,word__pay,-3.8924902663346796
+contemporary,negative,5,word__danger,-3.8415942760959583
+contemporary,negative,6,word__earl,-3.7486277665229597
+contemporary,negative,7,word__novella,-3.702145787288729
+contemporary,negative,8,word__drake,-3.586599373050282
+chick-lit,positive,1,char__ - ,8.078661573030525
+chick-lit,positive,2,word__bridget,6.398544058980126
+chick-lit,positive,3,word__gerry,6.125948081569659
+chick-lit,positive,4,word__holly,6.080417502220424
+chick-lit,positive,5,word__dublin,6.046852287835466
+chick-lit,positive,6,word__santangelo,6.024593406726572
+chick-lit,positive,7,word__joyce,5.53168053481828
+chick-lit,positive,8,word__becky,5.179358871194379
+chick-lit,positive,9,word__polly,4.996982668745267
+chick-lit,positive,10,word__hilarious,4.916973435125328
+chick-lit,positive,11,word__lucy,4.900774007185545
+chick-lit,positive,12,word__lara,4.866295534117636
+chick-lit,negative,1,char__ he ,-6.874787309658158
+chick-lit,negative,2,char__ his,-6.524741982239783
+chick-lit,negative,3,char__ his ,-6.419206226322425
+chick-lit,negative,4,char__ hi,-6.059847681602504
+chick-lit,negative,5,char__his,-5.740360366676398
+chick-lit,negative,6,char__his ,-5.609149080914658
+chick-lit,negative,7,word__romance,-4.8645479037770585
+chick-lit,negative,8,word__series,-4.46326824463192
+new-adult,positive,1,word__new adult,12.623435870681789
+new-adult,positive,2,word__college,9.45823876627286
+new-adult,positive,3,word__hardin,8.06005880373851
+new-adult,positive,4,word__campus,7.842735929559493
+new-adult,positive,5,word__girl,6.617552023920357
+new-adult,positive,6,word__ayden,6.3446587335898466
+new-adult,positive,7,word__layken,6.34025229099616
+new-adult,positive,8,word__kacey,5.807297720364919
+new-adult,positive,9,word__kiera,5.531585699235272
+new-adult,positive,10,word__rosemary beach,5.408525425589613
+new-adult,positive,11,word__breeze,4.921298562040593
+new-adult,positive,12,word__blaire,4.904844311197184
+new-adult,negative,1,word__woman,-8.269369118616446
+new-adult,negative,2,word__man,-6.3616320916529565
+new-adult,negative,3,word__gay,-5.988406555390365
+new-adult,negative,4,word__husband,-5.068819076119934
+new-adult,negative,5,word__men,-4.8101336575591285
+new-adult,negative,6,word__wife,-4.353537473212644
+new-adult,negative,7,word__handsome,-3.876013167762333
+new-adult,negative,8,word__baby,-3.7982414973845255
+young-adult,positive,1,word__maxon,8.322951776927718
+young-adult,positive,2,word__layken,7.663250787434421
+young-adult,positive,3,word__summer,7.355638337548897
+young-adult,positive,4,word__dad,7.03232226071002
+young-adult,positive,5,word__lina,6.153721238894379
+young-adult,positive,6,word__lennie,6.057828954771739
+young-adult,positive,7,word__dash,6.044865964737857
+young-adult,positive,8,word__sky,5.977782103201838
+young-adult,positive,9,word__school,5.96493463737672
+young-adult,positive,10,word__boyfriend,5.912879312370589
+young-adult,positive,11,word__america,5.911934744786754
+young-adult,positive,12,word__seventeen year,5.862464134831464
+young-adult,negative,1,word__man,-9.775201273210886
+young-adult,negative,2,word__woman,-8.543565372669546
+young-adult,negative,3,word__sexy,-5.320557234085227
+young-adult,negative,4,word__gay,-5.203109804086798
+young-adult,negative,5,word__women,-4.970500488662413
+young-adult,negative,6,word__years,-4.773421305366785
+young-adult,negative,7,word__sex,-4.715687294564466
+young-adult,negative,8,word__career,-4.549879329086726
+erotica,positive,1,word__gideon cross,8.149779254401366
+erotica,positive,2,word__sex,6.770910262111339
+erotica,positive,3,word__erotic,6.654680435309415
+erotica,positive,4,word__sector,6.599570192503002
+erotica,positive,5,word__sexual,6.253786594231683
+erotica,positive,6,word__sinners,6.2474189694015605
+erotica,positive,7,word__naughty,6.175545792192098
+erotica,positive,8,word__erotica,6.03985660414392
+erotica,positive,9,word__lust,5.564797306277291
+erotica,positive,10,word__gideon,4.922301151808341
+erotica,positive,11,word__dominik,4.873151572336006
+erotica,positive,12,word__amery,4.6916858990263846
+erotica,negative,1,word__hea,-4.655897681990529
+erotica,negative,2,word__gay,-4.256946346778667
+erotica,negative,3,word__romance,-4.179148872239554
+erotica,negative,4,word__duke,-3.6792221728243377
+erotica,negative,5,word__dream,-3.5512158050515508
+erotica,negative,6,word__family,-3.546025789573246
+erotica,negative,7,word__love,-3.3401122004035364
+erotica,negative,8,word__alpha,-3.297819121437335
+bdsm,positive,1,word__bdsm,18.821481402292147
+bdsm,positive,2,word__dom,15.285397847624306
+bdsm,positive,3,word__master,10.471105575402822
+bdsm,positive,4,word__submissive,9.810197175422465
+bdsm,positive,5,word__dominant,8.892214271057965
+bdsm,positive,6,word__sub,8.013122565190917
+bdsm,positive,7,word__leather,7.033435361165007
+bdsm,positive,8,char__ dom,6.885402566598869
+bdsm,positive,9,word__slave,6.7249269452842295
+bdsm,positive,10,word__dominik,6.559775218822938
+bdsm,positive,11,word__bianca,6.359854487996767
+bdsm,positive,12,word__submission,6.101542950133602
+bdsm,negative,1,word__mate,-5.2273792598782105
+bdsm,negative,2,word__romance,-4.382965775652232
+bdsm,negative,3,word__father,-3.3847629369599517
+bdsm,negative,4,word__sexy,-3.1565277443610316
+bdsm,negative,5,word__passionate,-3.102759880266775
+bdsm,negative,6,word__single,-2.824501768157485
+bdsm,negative,7,word__son,-2.759462118752471
+bdsm,negative,8,word__love,-2.701383975917241
+manga,positive,1,char__tsu,9.87464042264761
+manga,positive,2,word__manga,9.450327383139605
+manga,positive,3,char__ yu,8.094076047728072
+manga,positive,4,word__school,6.5219169622855695
+manga,positive,5,char__ki ,6.25008152984611
+manga,positive,6,char__ko ,6.046130289217138
+manga,positive,7,word__kyoko,5.615642852211431
+manga,positive,8,word__misaki,5.42270552246506
+manga,positive,9,word__aoi,5.303215530826578
+manga,positive,10,word__shin,5.271477702632849
+manga,positive,11,word__japanese,5.198288176775568
+manga,positive,12,char__uki,5.125106407467676
+manga,negative,1,word__sexy,-4.079090003708724
+manga,negative,2,word__book,-3.925351180151254
+manga,negative,3,word__woman,-3.786552555156277
+manga,negative,4,word__novel,-3.6096829255691936
+manga,negative,5,word__knows,-3.454548536133685
+manga,negative,6,char__e. ,-3.2607477086581342
+manga,negative,7,word__secrets,-3.2168291107409543
+manga,negative,8,word__life,-3.1792144459358735
+romantic-suspense,positive,1,word__fbi,8.297487877740096
+romantic-suspense,positive,2,word__kgi,6.638235086649939
+romantic-suspense,positive,3,word__operative,6.521499900388819
+romantic-suspense,positive,4,word__deadly,5.822070440012608
+romantic-suspense,positive,5,word__frisco,5.59252310254809
+romantic-suspense,positive,6,word__lolly,5.5669084658031505
+romantic-suspense,positive,7,word__suspense,5.557855485500701
+romantic-suspense,positive,8,word__killer,5.523003962027036
+romantic-suspense,positive,9,word__danger,5.426579589625233
+romantic-suspense,positive,10,word__security,5.419015582143137
+romantic-suspense,positive,11,word__murder,5.167217619011968
+romantic-suspense,positive,12,word__stalker,4.964259779196265
+romantic-suspense,negative,1,word__love,-5.538748663802053
+romantic-suspense,negative,2,word__vampire,-4.673615579116234
+romantic-suspense,negative,3,word__london,-3.7334353308406114
+romantic-suspense,negative,4,word__eve dallas,-3.7123065411267904
+romantic-suspense,negative,5,word__shifter,-3.4995685724823
+romantic-suspense,negative,6,word__little,-3.3047372876319883
+romantic-suspense,negative,7,word__solve,-3.2844594369074485
+romantic-suspense,negative,8,word__discovers,-3.2737234124755172
+fantasy,positive,1,word__mage,7.816236560660679
+fantasy,positive,2,word__sandy,7.8026619842113325
+fantasy,positive,3,word__magic,7.593061117234775
+fantasy,positive,4,word__prince,7.211551159371816
+fantasy,positive,5,word__magical,6.822577092278722
+fantasy,positive,6,word__iona,5.917258631733228
+fantasy,positive,7,word__healer,5.7724858770541685
+fantasy,positive,8,word__beast,5.539831501565877
+fantasy,positive,9,word__lilith,5.507483783491622
+fantasy,positive,10,word__realm,5.309088359764635
+fantasy,positive,11,word__fantasy,5.295910487028486
+fantasy,positive,12,word__king,5.211396904720265
+fantasy,negative,1,word__vampire,-4.82466956387656
+fantasy,negative,2,word__desire,-4.127673416035648
+fantasy,negative,3,word__hell,-3.8868505530229456
+fantasy,negative,4,word__roman,-3.7137731201490816
+fantasy,negative,5,word__killer,-3.6142184203024277
+fantasy,negative,6,word__night,-3.5987054825234663
+fantasy,negative,7,word__suddenly,-3.2410883220928803
+fantasy,negative,8,word__mate,-3.222930642822067

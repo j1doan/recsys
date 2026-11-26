@@ -1,0 +1,16 @@
+shelf,train_positives,validation_positives,test_positives
+m-m,12975,3059,3892
+historical-romance,12491,3112,3741
+paranormal,8598,1996,2596
+historical,7499,1812,2307
+contemporary-romance,5415,1218,1635
+paranormal-romance,5131,1175,1494
+contemporary,5131,1402,1833
+chick-lit,4897,1091,1720
+new-adult,4348,1025,1549
+young-adult,3518,850,1304
+erotica,3288,782,983
+bdsm,3155,752,926
+manga,3139,761,964
+romantic-suspense,3118,758,876
+fantasy,2053,427,625
