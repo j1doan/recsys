@@ -223,10 +223,6 @@ Mengting Wan, Rishabh Misra, Ndapa Nakashole, and Julian McAuley. 2019. Fine-Gra
 **Wang and Manning (2012)** is the text-classification comparison. They show that linear bags of words and bigrams, with multinomial Naive Bayes or a linear SVM, are strong sentiment and topic classifiers, and that bigrams help. Our model is in that family: TF-IDF word and character n-grams and a linear classifier, here logistic regression because the target is multi-label and the class weights are easy to set. Their paper also says why a linear bag of words fails when the meaning depends on what the blurb leaves out. "Not an inhumane monster" is their example of composition. Our *Silver* and *After Hours* cases are the same kind of miss: the shelf is a fact about the book, and the description never states it. We do not claim their sentiment accuracies as a target. Sentiment on movie reviews is one label per document. We have 15 sparse labels and a 10% vote rule.
 
 Sida Wang and Christopher D. Manning. 2012. Baselines and Bigrams: Simple, Good Sentiment and Topic Classification. In *Proceedings of the 50th Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers)*. Association for Computational Linguistics, 90–94. https://aclanthology.org/P12-2018/
-
-## What is left before submission
-
-This notebook is the written report. Export it with `jupyter nbconvert --to html workbook.ipynb` so the file starts with `<!DOCTYPE html>`. The presentation is still a separate recording of about 20 minutes: task 5, data 4, modeling 4, evaluation 4, related work 3. `video_url.txt` needs the real shared link. Peer grading is a later `responses.txt` upload. The deadline on Gradescope is the one that counts.
 """))
 
     nb = new_notebook(cells=cells, metadata={
