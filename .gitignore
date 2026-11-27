@@ -1,0 +1,9 @@
+data/
+artifacts/
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+*.pyc
+secret.env
+.env
+*.log

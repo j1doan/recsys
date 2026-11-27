@@ -1,0 +1,78 @@
+{
+  "source_repo": "https://github.com/j1doan/recsys",
+  "upstream_commit": "4eaaebdf8d89fd178105a5bcc1c976930a8fb284",
+  "python": "3.13.9",
+  "numpy": "2.1.3",
+  "scipy": "1.15.3",
+  "pandas": "2.2.3",
+  "sklearn": "1.6.1",
+  "jobs": 4,
+  "inner_threads": 1,
+  "wall_seconds": 1993.572954621,
+  "candidates": [
+    {
+      "name": "word_lr_balanced_C1",
+      "features": "word",
+      "model": "lr",
+      "C": 1.0,
+      "balanced": true
+    },
+    {
+      "name": "word_lr_balanced_C025",
+      "features": "word",
+      "model": "lr",
+      "C": 0.25,
+      "balanced": true
+    },
+    {
+      "name": "word_lr_balanced_C4",
+      "features": "word",
+      "model": "lr",
+      "C": 4.0,
+      "balanced": true
+    },
+    {
+      "name": "word_lr_unweighted_C1",
+      "features": "word",
+      "model": "lr",
+      "C": 1.0,
+      "balanced": false
+    },
+    {
+      "name": "word_svm_C025",
+      "features": "word",
+      "model": "svm",
+      "C": 0.25,
+      "balanced": true
+    },
+    {
+      "name": "word_svm_C1",
+      "features": "word",
+      "model": "svm",
+      "C": 1.0,
+      "balanced": true
+    },
+    {
+      "name": "wordchar_lr_C1",
+      "features": "word_char",
+      "model": "lr",
+      "C": 1.0,
+      "balanced": true
+    },
+    {
+      "name": "wordchar_svm_C1",
+      "features": "word_char",
+      "model": "svm",
+      "C": 1.0,
+      "balanced": true
+    }
+  ],
+  "data_limit": null,
+  "label_selection": "train only",
+  "split_seeds": {
+    "outer": 0,
+    "inner": 1
+  },
+  "bootstrap_seed": 42,
+  "selection_frozen_before_test": true
+}

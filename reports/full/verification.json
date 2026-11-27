@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "eligible_books": 299789,
+  "test_books": 60410,
+  "independent_metrics": {
+    "micro_f1": 0.5047291758622864,
+    "macro_f1": 0.4843347199102722,
+    "macro_auc": 0.9344322549729698,
+    "macro_ap": 0.4398654448916355
+  },
+  "executed_notebook_cells": 13,
+  "embedded_plot_images": 4,
+  "original_code_unchanged": true,
+  "full_data": true,
+  "work_overlap": 0
+}

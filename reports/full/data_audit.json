@@ -1,0 +1,46 @@
+{
+  "raw_books": 335449,
+  "nonempty_descriptions": 304837,
+  "dropped_insufficient_votes": 5048,
+  "eligible_books": 299789,
+  "missing_work_id_fallbacks": 0,
+  "partial_data": false,
+  "split_sizes": {
+    "train": 191692,
+    "validation": 47687,
+    "test": 60410
+  },
+  "split_work_counts": {
+    "train": 105388,
+    "validation": 26347,
+    "test": 32934
+  },
+  "labels": [
+    "m-m",
+    "historical-romance",
+    "paranormal",
+    "historical",
+    "contemporary-romance",
+    "paranormal-romance",
+    "contemporary",
+    "chick-lit",
+    "new-adult",
+    "young-adult",
+    "erotica",
+    "bdsm",
+    "manga",
+    "romantic-suspense",
+    "fantasy"
+  ],
+  "label_vocabulary_source": "training partition only",
+  "mean_labels_per_book": 0.4383783260893495,
+  "zero_label_fraction": 0.6559580238100797,
+  "group_overlap": 0,
+  "dataset_sha256": "19006689989a90d1b83ede16c6ef2338f65f8f432956515d7c6489fe7ac94d01",
+  "dataset_bytes": 364774184,
+  "data_url": "https://mcauleylab.ucsd.edu/public_datasets/gdrive/goodreads/byGenre/goodreads_books_romance.json.gz",
+  "exact_description_overlap": {
+    "train_validation_unique_texts": 124,
+    "test_books_with_text_in_train_or_validation": 279
+  }
+}

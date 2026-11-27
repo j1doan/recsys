@@ -1,0 +1,91 @@
+shelf,error_type,book_id,title,score,threshold,shelf_vote_fraction
+m-m,false_positive,25366120,Never Too Late Full Set,7.758678394309818,0.4197990079218681,0.08333333333333333
+m-m,false_positive,29497723,"Boy Meets Boy Meets Boy (Mad About the Brit Boys, #4)",6.598178507135902,0.4197990079218681,0.07177033492822966
+m-m,false_positive,23525656,Jake (Kinky in Kansas #1),6.576676922343896,0.4197990079218681,0.041666666666666664
+m-m,false_negative,35684773,"Príncipe Cativo: O Escravo (Príncipe Cativo, #1)",-4.271566677074656,0.4197990079218681,0.10199610516066213
+m-m,false_negative,18714271,"First Frost (Neighborly Affection, #3.5; Dino Martini, #2.5; Highlander Heat, #0.5)",-3.9499872078789684,0.4197990079218681,0.11363636363636363
+m-m,false_negative,1445610,After Hours,-3.792862384462949,0.4197990079218681,0.15217391304347827
+historical-romance,false_positive,26852631,"A Taste of Scandal: Regency Rogues, Bad Boys, and Sexy Scoundrels",8.908655713798812,0.8271875765073913,0.0967741935483871
+historical-romance,false_positive,32879189,"Hold Your Breath: Books 1-3: Rogues, Rakes and Dukes (The Hold Your Breath Series Boxset)",7.559155870802481,0.8271875765073913,0.07692307692307693
+historical-romance,false_positive,87629,Confessions of a Viscount,7.301022266324619,0.8271875765073913,0.09473684210526316
+historical-romance,false_negative,17433645,Emma: The Wild and Wanton Edition,-4.584609046242679,0.8271875765073913,0.10204081632653061
+historical-romance,false_negative,32187258,Taming Chiron (The Haberdashers Book 5),-4.079511794701926,0.8271875765073913,0.23076923076923078
+historical-romance,false_negative,29281075,Mary (Clover Springs Mail Order Brides #2),-3.991903162360229,0.8271875765073913,0.125
+paranormal,false_positive,23314592,"Archangel's Shadows (Guild Hunter, #7)",8.403097054108152,0.2984156211127136,0.09991052788547569
+paranormal,false_positive,22545233,"Archangel's Shadows (Guild Hunter, #7)",8.399748972125103,0.2984156211127136,0.09991052788547569
+paranormal,false_positive,9696895,Devoured By Darkness / When Darkness Comes / Embrace the Darkness,7.295289923740776,0.2984156211127136,0.03409090909090909
+paranormal,false_negative,7468679,"Heart of Darkness (Includes: Lords of the Underworld, #4.5)",-5.739888808768276,0.2984156211127136,0.19256756756756757
+paranormal,false_negative,18927676,"The Professor (At The Lake, #1)",-5.272205227370325,0.2984156211127136,0.13043478260869565
+paranormal,false_negative,29473735,"The Tempting Touch Of Fire (Elemental Awakening, #1)",-5.153993206687881,0.2984156211127136,0.10822510822510822
+historical,false_positive,11494662,"Sally MacKenzie Bundle: The Naked Earl, The Naked Gentleman, The Naked Marquis, The Naked Baron, The Naked Duke, The Naked Viscount, The Naked King",7.400035800501797,0.37131862122053594,0.05217391304347826
+historical,false_positive,1544513,"Just Impossible (The Blackcastle Trilogy, #3)",6.000995477873195,0.37131862122053594,0.0
+historical,false_positive,34863112,The Dukes of Vauxhall,5.996820873374837,0.37131862122053594,0.03571428571428571
+historical,false_negative,6430424,Downtime,-5.548189391117011,0.37131862122053594,0.11316113161131611
+historical,false_negative,13163005,La Desperada,-5.048236679191646,0.37131862122053594,0.1044776119402985
+historical,false_negative,27846690,The Barren Bride,-4.75786008676433,0.37131862122053594,0.13333333333333333
+contemporary-romance,false_positive,22314520,"The Kelly Brothers, Books 1-3 (Kelly Brothers, #1-3)",6.499176846043113,0.3173005147224641,0.03333333333333333
+contemporary-romance,false_positive,26037638,"Lucky Harbor Collection 3: It Had To Be You, Always On My Mind, Once In A Lifetime",4.512137123082937,0.3173005147224641,0.0
+contemporary-romance,false_positive,114210,The Quinn Legacy (Chesapeake Bay Saga #3 & 4),3.926221238193748,0.3173005147224641,0.06666666666666667
+contemporary-romance,false_negative,2674675,Lelang Pengantin,-5.559299642929144,0.3173005147224641,0.18181818181818182
+contemporary-romance,false_negative,28512221,Shadowed Promise,-5.397042527139802,0.3173005147224641,0.125
+contemporary-romance,false_negative,28592074,Shadowed Promise,-5.397042527139802,0.3173005147224641,0.125
+paranormal-romance,false_positive,34021977,"Archangel's Viper (Guild Hunter, #10)",7.693675964648904,0.40552459954224984,0.09961928934010152
+paranormal-romance,false_positive,34050960,Archangel's Viper,7.693675964648904,0.40552459954224984,0.09878903760356915
+paranormal-romance,false_positive,33852961,"Archangel's Viper (Guild Hunter, #10)",7.693675964648904,0.40552459954224984,0.09936305732484077
+paranormal-romance,false_negative,18192298,Love's Intensity,-6.029401218537804,0.40552459954224984,0.125
+paranormal-romance,false_negative,34235789,"Cowboy Bear Blues (Cowboy Brother Bears, #1)",-5.411212782938172,0.40552459954224984,0.10526315789473684
+paranormal-romance,false_negative,9219071,His to Want,-4.966664111897169,0.40552459954224984,0.125
+contemporary,false_positive,10841305,"Christmas in Lucky Harbor (Lucky Harbor, #1-2)",4.314349266075391,-0.43675522659769395,0.08238636363636363
+contemporary,false_positive,11756150,"Christmas in Lucky Harbor (Lucky Harbor, #1-2)",4.184051942506326,-0.43675522659769395,0.08238636363636363
+contemporary,false_positive,11178340,"Christmas in Lucky Harbor (Lucky Harbor, #1-2)",4.184051942506326,-0.43675522659769395,0.08238636363636363
+contemporary,false_negative,29490393,Alpha Feud Book 2,-7.169229847192743,-0.43675522659769395,0.1
+contemporary,false_negative,27239361,Wanting My Stepdad (Taboo Gay Stepfather Gay Stepson Romance #2),-6.899421034359002,-0.43675522659769395,0.1
+contemporary,false_negative,29909341,Dustin's Novel,-6.73330433782055,-0.43675522659769395,0.13333333333333333
+chick-lit,false_positive,16167867,Divorcees.Biz,6.857928310238771,0.5821232549008029,0.06382978723404255
+chick-lit,false_positive,18805169,Diary of an Unsmug Married,6.744004302982024,0.5821232549008029,0.08771929824561403
+chick-lit,false_positive,19634590,Diary of an Unsmug Married,6.582327411130107,0.5821232549008029,0.08771929824561403
+chick-lit,false_negative,6950627,The Notebook,-5.941732371932516,0.5821232549008029,0.11587503984698756
+chick-lit,false_negative,27414110,"The Notebook (The Notebook, #1)",-5.781272398645718,0.5821232549008029,0.11587503984698756
+chick-lit,false_negative,1297370,The Notebook,-5.781272398645718,0.5821232549008029,0.11587503984698756
+new-adult,false_positive,20670248,"The Rosemary Beach Collection: Rush and Blaire (Too Far, #1-3)",8.494342053516885,0.7584988452950943,0.06611570247933884
+new-adult,false_positive,25931424,The Blythe College Complete Series Box Set,6.286541428007611,0.7584988452950943,0.02631578947368421
+new-adult,false_positive,23862762,"3:AM Kisses Boxed Set: Books 1-3 (3:AM Kisses, #1-3)",6.027884990572796,0.7584988452950943,0.0
+new-adult,false_negative,18661231,Saving Toby,-6.859696161645555,0.7584988452950943,0.135678391959799
+new-adult,false_negative,18775671,"Working It (Love by Design, #1)",-6.106983077015946,0.7584988452950943,0.12923462986198245
+new-adult,false_negative,18338470,"Working It (Love by Design, #1)",-6.086334894264791,0.7584988452950943,0.12923462986198245
+young-adult,false_positive,17563035,"Prom for One (The Lexie and Rhett Chronicles, #1)",6.640371744932486,0.34812475308629764,0.0
+young-adult,false_positive,26292467,On the Outside,6.437466264986896,0.34812475308629764,0.09049773755656108
+young-adult,false_positive,10338622,"At the Party (At the Party, #1-4)",6.285189372684749,0.34812475308629764,0.0859375
+young-adult,false_negative,25199521,"Broken Sunrise (Hardest Mistakes, #3)",-6.776030983437193,0.34812475308629764,0.125
+young-adult,false_negative,776591,"Anna and the Duke (The MacLaughlins, #1)",-5.257425598644387,0.34812475308629764,0.14336917562724014
+young-adult,false_negative,12895713,Wake,-5.234225884120862,0.34812475308629764,0.13719512195121952
+erotica,false_positive,18138739,The Mistress Files: The Case of the Diffident Dom,9.015487533998925,0.8330860307791834,0.08974358974358974
+erotica,false_positive,11143726,One Night Loan,7.251221284912912,0.8330860307791834,0.08196721311475409
+erotica,false_positive,12212265,Exposed and Pleasured (The Masters #3),7.121796151551852,0.8330860307791834,0.03937007874015748
+erotica,false_negative,931614,The Silver Collar,-5.893891483970239,0.8330860307791834,0.1388888888888889
+erotica,false_negative,4944493,"Gifts (Duvall Inc, #3)",-5.645202206166816,0.8330860307791834,0.35294117647058826
+erotica,false_negative,23345417,Duty of Care,-5.303643641277976,0.8330860307791834,0.13333333333333333
+bdsm,false_positive,23149685,To Sir,13.17027964085151,1.3429998341937117,0.05
+bdsm,false_positive,18138739,The Mistress Files: The Case of the Diffident Dom,12.99553430102707,1.3429998341937117,0.05128205128205128
+bdsm,false_positive,6615223,Switching Seth (Rose & Thorn Society #1),12.573953377064727,1.3429998341937117,0.08333333333333333
+bdsm,false_negative,24710646,Wicked for You (Wicked Lovers #10),-6.083993345434086,1.3429998341937117,0.11931818181818182
+bdsm,false_negative,24612007,"Wicked for You (Wicked Lovers, #10)",-6.083993345434086,1.3429998341937117,0.11931818181818182
+bdsm,false_negative,30762167,"Voor altijd gezien (Voor altijd, #1)",-5.192895277816801,1.3429998341937117,0.10166799046862589
+manga,false_positive,13330144,"Mishounen Produce, Vol. 02",7.705712303175793,0.7018672211482151,0.0
+manga,false_positive,31436180,"君は、オレが好きだって言ったらどんな顔するだろう。1 [Kimi wa, Ore ga Suki Datte Ittara Donna Kao Suru Darou.]",7.453963240510899,0.7018672211482151,0.0
+manga,false_positive,25968026,Gangster Darling,7.198021632532928,0.7018672211482151,0.0975609756097561
+manga,false_negative,6670295,シルバー 1 (Silver #1),-3.7372336674939484,0.7018672211482151,0.36363636363636365
+manga,false_negative,17250640,Dear Only You Don't Know! Volume 1,-3.701469490066239,0.7018672211482151,0.21428571428571427
+manga,false_negative,12792455,Maddie's Love-Child,-3.374402119824203,0.7018672211482151,0.13333333333333333
+romantic-suspense,false_positive,33413506,Murder in Black Canyon (The Ranger Brigade: Family Secrets #1),7.518836280695918,0.7604231107886119,0.09090909090909091
+romantic-suspense,false_positive,33505106,Murder in Black Canyon,7.518836280695918,0.7604231107886119,0.09090909090909091
+romantic-suspense,false_positive,19284629,"The Titan Series Boxed Set (Titan #1, 2, 3, 3.1, 3.2)",7.3149114698191,0.7604231107886119,0.06622516556291391
+romantic-suspense,false_negative,13550371,Open Season,-5.689932195552837,0.7604231107886119,0.176313446126447
+romantic-suspense,false_negative,13550227,Open Season,-5.564346544186978,0.7604231107886119,0.176313446126447
+romantic-suspense,false_negative,2992041,Open Season,-5.222146419494628,0.7604231107886119,0.176313446126447
+fantasy,false_positive,31932023,"The Prince and The Frog (Stories, Tales, and Legends: Retold #1)",6.698822897641843,0.924955182297472,0.07142857142857142
+fantasy,false_positive,35575205,"The Dragon's Treasure (Seven Kingdoms Tales, #1)",6.556555882909857,0.924955182297472,0.0625
+fantasy,false_positive,25053234,A Pirate's Dream (Kingdom #11),5.843787573311944,0.924955182297472,0.05673758865248227
+fantasy,false_negative,7061050,His Final Seduction,-5.490235781107501,0.924955182297472,0.1
+fantasy,false_negative,22725260,The Soldier and the Sea,-5.2975917216916955,0.924955182297472,0.13043478260869565
+fantasy,false_negative,18664913,A Little Moon Madness,-4.977531076868481,0.924955182297472,0.1

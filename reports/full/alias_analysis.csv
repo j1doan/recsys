@@ -1,0 +1,4 @@
+shelf_a,shelf_b,train_a,train_b,intersection,union,positive_jaccard
+historical-romance,historical,12491,7499,6467,13523,0.4782222879538564
+contemporary-romance,contemporary,5415,5131,2272,8274,0.27459511723471114
+paranormal-romance,paranormal,5131,8598,4037,9692,0.4165290961617829

@@ -1,0 +1,50 @@
+{
+  "selection_metric": "validation macro-F1, per-label thresholds",
+  "secondary_tiebreak": "validation micro-F1, then candidate name",
+  "selected_candidate": "wordchar_lr_C1",
+  "selected_config": {
+    "name": "wordchar_lr_C1",
+    "features": "word_char",
+    "model": "lr",
+    "C": 1.0,
+    "balanced": true
+  },
+  "selected_validation_macro_f1": 0.48733721923302453,
+  "labels": [
+    "m-m",
+    "historical-romance",
+    "paranormal",
+    "historical",
+    "contemporary-romance",
+    "paranormal-romance",
+    "contemporary",
+    "chick-lit",
+    "new-adult",
+    "young-adult",
+    "erotica",
+    "bdsm",
+    "manga",
+    "romantic-suspense",
+    "fantasy"
+  ],
+  "thresholds": [
+    0.4197990079218681,
+    0.8271875765073913,
+    0.2984156211127136,
+    0.37131862122053594,
+    0.3173005147224641,
+    0.40552459954224984,
+    -0.43675522659769395,
+    0.5821232549008029,
+    0.7584988452950943,
+    0.34812475308629764,
+    0.8330860307791834,
+    1.3429998341937117,
+    0.7018672211482151,
+    0.7604231107886119,
+    0.924955182297472
+  ],
+  "refit_on_train_plus_validation": false,
+  "reason_no_refit": "Keep validation-tuned thresholds on the fitted score scale.",
+  "test_used_for_selection": false
+}
