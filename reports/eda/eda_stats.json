@@ -1,13 +1,34 @@
 {
-  "source_file": "data/goodreads_books_romance.json.gz",
-  "raw_books": 335449,
-  "nonempty_descriptions": 304837,
-  "eligible_books": 299789,
+  "dataset_file": "data/goodreads_books_romance.json.gz",
+  "flow": {
+    "Raw books": 335449,
+    "With a description": 304837,
+    ">= 10 content votes (eligible)": 299789,
+    "Train split": 191692,
+    "Validation split": 47687,
+    "Test split": 60410
+  },
   "dropped_no_description": 30612,
-  "dropped_fewer_than_10_content_votes": 5048,
-  "zero_label_books": 196649,
+  "dropped_fewer_than_10_votes": 5048,
+  "labels": [
+    "m-m",
+    "historical-romance",
+    "paranormal",
+    "historical",
+    "contemporary-romance",
+    "paranormal-romance",
+    "contemporary",
+    "chick-lit",
+    "new-adult",
+    "young-adult",
+    "erotica",
+    "bdsm",
+    "manga",
+    "romantic-suspense",
+    "fantasy"
+  ],
   "zero_label_fraction": 0.6559580238100797,
-  "mean_labels_per_eligible_book": 0.4383783260893495,
+  "mean_labels_per_book": 0.4383783260893495,
   "labels_per_book": {
     "0": 196649,
     "1": 75513,
@@ -15,124 +36,97 @@
     "3": 636,
     "4": 9
   },
-  "label_support_eligible": {
-    "m-m": 19926,
-    "historical-romance": 19344,
-    "paranormal": 13190,
-    "historical": 11618,
-    "contemporary-romance": 8268,
-    "paranormal-romance": 7800,
-    "contemporary": 8366,
-    "chick-lit": 7708,
-    "new-adult": 6922,
-    "young-adult": 5672,
-    "erotica": 5053,
-    "bdsm": 4833,
-    "manga": 4864,
-    "romantic-suspense": 4752,
-    "fantasy": 3105
+  "label_level_negative_rate": 0.97077477826071,
+  "content_votes": {
+    "median": 137.0,
+    "p10": 30.0,
+    "p90": 1244.0,
+    "below_30": 0.09965008722801703
   },
-  "description_words_with_text": {
-    "mean": 156.18420336114053,
+  "description_words": {
+    "p10": 74.0,
     "median": 147.0,
     "p90": 241.0,
-    "max": 3943
+    "p99": 443.0,
+    "max": 3943,
+    "under_20_words": 2378
   },
-  "description_words_eligible": {
-    "mean": 156.2964885302663,
-    "median": 147.0,
-    "p90": 241.0,
-    "max": 3943
+  "descriptions_with_html_tags": 51,
+  "duplicate_descriptions": {
+    "books_sharing_exact_text": 99319,
+    "distinct_shared_texts": 42381,
+    "books_whose_text_spans_several_works": 1419,
+    "books_whose_text_crosses_splits": 1013
   },
-  "ratings_count": {
-    "missing": 0,
-    "zero": 1499,
-    "zero_share": 0.004468637557423036,
-    "mean": 448.00812940268116,
-    "quantiles": {
-      "0.1": 5.0,
-      "0.25": 16.0,
-      "0.5": 52.0,
-      "0.75": 175.0,
-      "0.9": 591.0,
-      "0.99": 5763.520000000019
+  "language_eligible": {
+    "top": {
+      "eng": 148852,
+      "(empty)": 84818,
+      "en-US": 17554,
+      "en-GB": 13729,
+      "ita": 5107,
+      "spa": 4876,
+      "ind": 3625,
+      "en-CA": 3165
     },
-    "max": 2078406.0
+    "english_codes_share": 0.6114300391275197,
+    "empty_share": 0.2829256577125912
   },
-  "average_rating_zero": 46,
-  "average_rating_missing": 0,
+  "top_shelf_is_one_of_15": 0.5185380384203556,
+  "top_shelves_overall": {
+    "m-m": 23802,
+    "historical-romance": 21712,
+    "contemporary-romance": 16803,
+    "paranormal": 15015,
+    "new-adult": 11454,
+    "contemporary": 9853,
+    "chick-lit": 9339,
+    "erotica": 8915,
+    "series": 8317,
+    "paranormal-romance": 7282
+  },
+  "raw_missing_or_empty": {
+    "publication_year": 101800,
+    "ratings_count": 0,
+    "average_rating": 0,
+    "num_pages": 136630,
+    "language_code": 104396,
+    "publisher": 123837,
+    "format": 112865,
+    "is_ebook": 0,
+    "isbn": 203238,
+    "series": 126503,
+    "similar_books": 127924
+  },
   "publication_year": {
     "missing": 101800,
     "equal_to_1": 1,
     "equal_to_65535": 2,
-    "below_1800": 83,
+    "before_1800": 83,
     "after_2017": 255,
-    "in_1800_to_2017": 233311
+    "median_valid": 2013.0
   },
-  "language_top": [
-    [
-      "eng",
-      160125
-    ],
-    [
-      "(empty)",
-      104396
-    ],
-    [
-      "en-US",
-      18932
-    ],
-    [
-      "en-GB",
-      14793
-    ],
-    [
-      "ita",
-      5292
-    ],
-    [
-      "spa",
-      5060
-    ],
-    [
-      "ind",
-      4178
-    ],
-    [
-      "en-CA",
-      3420
-    ]
-  ],
+  "ratings_count": {
+    "zero": 1499,
+    "median": 52.0,
+    "mean": 448.00812940268116,
+    "p99": 5763.520000000019,
+    "max": 2078406.0
+  },
+  "average_rating_zero": 46,
   "similar_books": {
     "links": 3146805,
     "inside_file": 2638273,
     "inside_share": 0.8383973585906975
   },
-  "train_alias_pairs": {
-    "historical__historical-romance": {
-      "(False, False)": 178169,
-      "(True, True)": 6467,
-      "(False, True)": 6024,
-      "(True, False)": 1032
-    },
-    "contemporary__contemporary-romance": {
-      "(False, False)": 183418,
-      "(False, True)": 3143,
-      "(True, False)": 2859,
-      "(True, True)": 2272
-    },
-    "paranormal__paranormal-romance": {
-      "(False, False)": 182000,
-      "(True, True)": 4037,
-      "(True, False)": 4561,
-      "(False, True)": 1094
-    }
-  },
-  "metadata_not_used_by_text_model": [
+  "not_model_inputs": [
     "publication_year",
     "ratings_count",
     "average_rating",
+    "num_pages",
     "language_code",
-    "similar_books"
+    "similar_books",
+    "publisher",
+    "format"
   ]
 }

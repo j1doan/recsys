@@ -5,6 +5,8 @@ from pathlib import Path
 import nbformat
 from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook, new_output
 
+from scripts import eda_section
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -55,60 +57,7 @@ The local file used for the data checks is `data/goodreads_books_romance.json.gz
 **Whether a prediction is valid.** Shelf votes are a noisy proxy, not a checked genre label. Validity is checked in three ways: the test books were not used to pick the model, editions of one work are not split across train and test, and ten high-confidence mistakes were read against the publisher description and the raw shelf counts (`reports/manual_error_analysis.csv`).
 """))
 
-    cells.append(new_markdown_cell("""## 2. Data, collection, and cleaning
-
-The file is the romance subset of the UCSD Goodreads crawl, collected in late 2017 from public shelves. User IDs in the broader release are anonymized. The authors ask that the data be used for academic work and not redistributed or used commercially. The romance file has book metadata only. This project does not use the interaction file or the review file, so there is no user history to feed a recommender.
-
-`scripts/eda_romance.py` recounts the file. The counts match the modeling audit.
-"""))
-
-    cells.append(code(
-        "import json\n"
-        "stats = json.load(open('reports/eda/eda_stats.json'))\n"
-        "print('raw', stats['raw_books'])\n"
-        "print('with description', stats['nonempty_descriptions'])\n"
-        "print('eligible', stats['eligible_books'])\n"
-        "print('share with none of the 15 labels', round(stats['zero_label_fraction'], 4))\n"
-        "print('ratings median/mean/max',\n"
-        "      stats['ratings_count']['quantiles']['0.5'],\n"
-        "      round(stats['ratings_count']['mean'], 1),\n"
-        "      stats['ratings_count']['max'])\n"
-        "print('similar_books inside this file', round(stats['similar_books']['inside_share'], 4))",
-        "raw 335449\n"
-        "with description 304837\n"
-        "eligible 299789\n"
-        "share with none of the 15 labels 0.6560\n"
-        "ratings median/mean/max 52.0 448.0 2078406.0\n"
-        "similar_books inside this file 0.8384\n",
-    ))
-
-    cells.append(new_markdown_cell("""Of 335,449 raw books, 30,612 have an empty description and are dropped. Another 5,048 have a description but fewer than 10 content-shelf votes, which leaves 299,789 eligible books. The development books in the original two-way plan are now split into training and validation. The test book IDs from that plan are unchanged.
-
-Eligible descriptions have a median of 147 words. The body of the distribution sits well below 400 words, with a long tail of catalog text and box-set blurbs.
-
-The 15 shelves are uneven. `m-m` and `historical-romance` each cover about 19,000 eligible books. `fantasy` covers 3,105. `manga` is a medium that readers shelved inside a romance dump, which is why its text is easy to recognize and why it is a strange romance label.
-
-196,649 eligible books, 65.6%, have zero positive labels under the 10% rule. 75,513 have one, 26,982 have two, and only 645 have three or more. Macro-F1 has to care about the rare shelves. Micro-F1 will be pulled toward the common ones, and toward the huge negative class.
-
-Rating counts are a heavy tail: median 52, mean 448, maximum about 2.08 million. 1,499 books, 0.45%, have zero ratings. Publication year is missing on 101,800 books. The recorded extremes are year 1 (one book) and year 65535 (two books); 83 books are dated before 1800. Language is `eng` on 160,125 books and empty on 104,396. These fields are used only to describe the file. The classifier never sees year, rating, language, or `similar_books`. About 83.8% of `similar_books` links point at another row in this file, so a link-prediction task would have been possible. It is not this task.
-"""))
-
-    cells.append(code(
-        "from IPython.display import Image, display\n"
-        "display(Image('reports/eda/description_lengths.png'))\n"
-        "display(Image('reports/eda/label_support.png'))\n"
-        "display(Image('reports/eda/labels_per_book.png'))\n"
-        "display(Image('reports/eda/ratings_tail.png'))\n"
-        "display(Image('reports/eda/publication_years.png'))",
-        '',
-        [
-            'reports/eda/description_lengths.png',
-            'reports/eda/label_support.png',
-            'reports/eda/labels_per_book.png',
-            'reports/eda/ratings_tail.png',
-            'reports/eda/publication_years.png',
-        ],
-    ))
+    cells.extend(eda_section.cells())
 
     cells.append(new_markdown_cell("""## 3. Modeling
 
