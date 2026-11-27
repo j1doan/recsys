@@ -85,10 +85,10 @@ The keyword baseline requested in the original plan is already implemented and e
 - Discuss strong and weak shelves. For the primary model, `manga` has F1 0.8803, `historical-romance` 0.6969, and `m-m` 0.6834; `contemporary` has 0.2305 and `contemporary-romance` 0.2807.
 - Read both false positives and false negatives across strong and weak labels. A suggested starting set is 6-10 cases. The queue contains up to three confidence-ranked examples of each error type per shelf, so describe that selection method rather than treating it as a representative random sample.
 - Retrieve descriptions by `book_id` from the raw dataset or the local prepared cache. Inspect text evidence and shelf vote shares; distinguish plausible explanations from confirmed facts.
-- Save the human review in a proposed `reports/manual_error_analysis.csv`, with columns such as `book_id`, `shelf`, `error_type`, `text_evidence`, `interpretation`, and `reviewer`.
-- Write the evaluation section with one aggregate comparison, the per-shelf view, a few annotated cases, and limitations. The error queue currently contains no human-reviewed error explanations.
+- Save the human review in a proposed `reports/manual_error_analysis.csv`, with columns such as `book_id`, `shelf`, `error_type`, `text_evidence`, `interpretation`, and `reviewer`. A first reading of 10 confidence-ranked cases is now in that file. The queue itself remains the unreviewed candidate list.
+- Write the evaluation section with one aggregate comparison, the per-shelf view, a few annotated cases, and limitations. The draft for the shared notebook is [evaluation/EVALUATION.md](evaluation/EVALUATION.md).
 
-**Completion criterion:** a readable evaluation section supported by the existing results and actual manual inspection, ready for the shared notebook and approximately four minutes of presentation.
+**Completion criterion:** a readable evaluation section supported by the existing results and actual manual inspection, ready for the shared notebook and approximately four minutes of presentation. The draft above is ready to paste. It still needs the integration owner to place it in the shared notebook, and the group to confirm who presents it.
 
 ## 3. EDA owner: data context, plots, and cleaning notes
 
