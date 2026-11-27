@@ -1,49 +1,60 @@
 # %% [markdown]
 # # Predicting Goodreads Shelves from Book Descriptions
 #
-# CSE 258, Assignment 2. This notebook accompanies our presentation and follows the five parts of the assignment in order: the predictive task, the data, the model, the evaluation, and related work.
+# *CSE 258, Assignment 2*
 #
-# On Goodreads, readers organize books into "shelves" that they name themselves. Shelves such as `historical-romance`, `paranormal`, or `m-m` work as community-assigned genre tags, and a recommender or a search page can use them to find books of a given kind. These tags only accumulate after people have read a book. A newly published book has no shelves, so a system that relies on shelves has no way to place it. This is an instance of the item cold-start problem discussed in the course.
-#
-# A new book does come with a description, usually written by the publisher. Our research question is whether a model that sees only a book's description can predict which shelves readers will put it on. We study this question with a TF-IDF representation of the description and one logistic regression per shelf, a standard linear text classifier.
-#
-# The short answer is that it depends on the shelf. For shelves whose books share a recognizable vocabulary, the description is a strong signal: on books the model has never seen, it reaches an F1 score of 0.81 for `manga`, 0.69 for `historical-romance`, and 0.63 for `m-m`. For shelves that readers apply inconsistently, the signal is weak, with an F1 of 0.24 for `contemporary` and 0.28 for `contemporary-romance`. Averaged over all 15 shelves, the model's macro-F1 is 0.45, compared with 0.11 for a rule that looks for the shelf's name in the text. Section 4 shows that the main reason some shelves fail is disagreement among readers about the label, and that the amount of training data plays a much smaller role.
+# **Abstract.** Goodreads readers assign books to user-defined shelves that act as genre tags, but a newly published book has no shelves, which leaves shelf-based recommendation without input for new items. We study whether the description of a romance novel is sufficient to predict 15 common reader shelves. Using 299,789 books from the UCSD Goodreads dataset, we train one logistic regression per shelf on TF-IDF word and character features and evaluate it on 60,410 held-out books. The model reaches a macro-F1 of 0.454, compared with 0.106 for a keyword baseline. Performance varies widely across shelves, from an F1 of 0.812 for `manga` to 0.244 for `contemporary`. Across shelves, F1 is strongly correlated with a measure of reader disagreement about the label (Spearman $\rho = -0.82$) and only weakly with the number of training examples ($\rho = +0.23$). We conclude that descriptions predict shelves with a distinctive vocabulary well, and that the main limit on the remaining shelves is the consistency of the labels.
 
 # %% [markdown]
-# ## 1. Predictive task
+# ## I. Introduction
 #
-# ### Problem statement
+# Goodreads users organize books into shelves that they name themselves. Shelves such as `historical-romance`, `paranormal`, and `m-m` function as community-assigned genre tags, and recommendation and search systems can use them to retrieve books of a given kind. Shelves accumulate only after readers have engaged with a book, so a newly published book has none. This is an instance of the item cold-start problem.
 #
-# Each example is one book. The input is the text of its description, and the output is a vector of 15 binary labels, one for each of the 15 most common genre shelves. A book may carry several shelves or none, so this is a multi-label classification problem.
+# A new book does have a description, usually supplied by the publisher. This report addresses the following question: given only its description, can a model predict which shelves readers will assign to a book? We study the question with a TF-IDF representation and a linear classifier, a standard approach to text classification [3].
 #
-# The labels come from reader behavior. For every book, the dataset lists its most popular shelves and how many times readers placed the book on each. We treat a shelf as a true label for a book when it receives at least 10% of the book's genre-related shelf votes; section 2.2 explains this choice. The definition rests on an assumption: a shelf chosen by a tenth of a book's readers reflects a shared opinion about the book, while a shelf chosen by one or two readers does not.
-#
-# ### Simulating cold start
-#
-# The data is a single snapshot, so we cannot observe books at the moment of release. We approximate the cold-start setting by taking books whose shelves are known, hiding those shelves, and asking the model to recover them from the description alone. This approximation assumes that the descriptions of established books resemble those of new books. It also limits us to books with at least 10 genre votes, which are more established than a typical new release.
-#
-# ### Evaluation protocol
-#
-# We split the books into training (64%), validation (16%), and test (20%) sets. Different editions of the same work usually share a description, so we split by work, which places all editions of a book in the same set. Without this grouping, the model could be tested on descriptions it had already seen during training. The validation set is used only to choose a decision threshold for each shelf, and the test set is used once, after every choice has been fixed.
-#
-# We measure performance mainly with F1, the harmonic mean of precision (the share of predicted shelves that are correct) and recall (the share of true shelves that the model finds). We report micro-F1, which pools all book-shelf decisions and is therefore dominated by frequent shelves, and macro-F1, which averages the F1 of each shelf and gives every shelf equal weight. We treat macro-F1 as the primary metric because our question concerns individual shelves, including rare ones. We also report ROC AUC and average precision (AP), which measure how well the model ranks books before any threshold is applied. Accuracy is not informative for this task. Since 97.1% of book-shelf pairs are negative, a model that never predicts any shelf would be 97.1% accurate and entirely useless.
-#
-# ### Baselines
-#
-# We compare against two baselines that involve no learning. The label-prior baseline predicts a shelf whenever more than half of the training books carry it. No shelf is that common, so it never predicts anything and scores an F1 of zero; it marks the floor that any useful model must clear. The keyword baseline predicts a shelf whenever the shelf's name, such as "historical romance", appears in the description, which tests whether the task can be solved by looking for the obvious word. We also report our own model with the default threshold of probability 0.5, to separate the contribution of the learned weights from the contribution of threshold tuning.
-#
-# ### Validity
-#
-# We check whether the predictions can be trusted in three ways. First, the split guarantees that test books, and all other editions of them, play no role in training or in threshold selection. Second, we inspect the learned weights to confirm that the model relies on genre-related words. Third, since shelf votes are a noisy proxy for genre, we measure the noise in each shelf's labels (section 2.3) and test whether it explains where the model fails (section 4).
+# Sections II to VI follow the five parts of the assignment. Section II defines the predictive task and the evaluation protocol. Section III describes the dataset, its exploratory analysis, and the construction of labels. Section IV presents the model. Section V reports the evaluation. Section VI discusses related work, and Section VII concludes.
 
 # %% [markdown]
-# ## 2. Data, exploration, and preprocessing
+# ## II. Predictive Task
+
+# %% [markdown]
+# ### A. Problem Formulation
 #
-# ### 2.1 Source
+# Each example is one book. The input is the text of its description, and the output is a vector of 15 binary labels, one for each of the 15 most frequent genre shelves. A book may carry several of these shelves or none, so the task is multi-label classification.
 #
-# We use the romance subset of the UCSD Goodreads dataset [1, 2], which was collected in late 2017 by crawling public Goodreads shelves. Each line of the file describes one book: its title, authors, description, publication details, rating summary, similar books, and most popular shelves with their vote counts. The file contains no user identifiers and no reviews, so the interaction-based models from the course, such as latent factor models and BPR, cannot be applied, and a content-based approach is the natural choice. The dataset is distributed for academic use only, so it is not included in this repository; the notebook reads a local copy whose path is set in `secret.env`.
+# The labels are derived from reader behavior. For every book, the dataset lists its most popular shelves together with the number of times readers placed the book on each. A shelf is considered a true label for a book when it receives at least 10% of the book's genre-related shelf votes (Section III-C). This definition assumes that a shelf chosen by a tenth of a book's readers reflects a shared judgment about the book, whereas a shelf chosen by one or two readers does not.
+
+# %% [markdown]
+# ### B. Cold-Start Approximation
 #
-# The following cells load the full file and examine each field.
+# The dataset is a single snapshot and does not record books at the time of release. We therefore approximate the cold-start setting by hiding the shelves of books whose shelves are known and predicting them from the description alone. The approximation assumes that the descriptions of established books are representative of those of new books. It also restricts the study to books with at least 10 genre votes, which are more established than a typical new release.
+
+# %% [markdown]
+# ### C. Evaluation Protocol
+#
+# The books were split into training (64%), validation (16%), and test (20%) sets. Editions of the same work usually share a description, so the split was performed by work, and all editions of a book belong to the same set. Without this grouping, the model could be evaluated on descriptions it had already seen during training. The validation set was used only to select a decision threshold for each shelf, and the test set was used once, after all choices had been fixed.
+#
+# Performance is measured primarily by F1, the harmonic mean of precision (the fraction of predicted shelves that are correct) and recall (the fraction of true shelves that are predicted). Micro-F1 pools all book-shelf decisions and is dominated by frequent shelves; macro-F1 averages the per-shelf F1 and weights every shelf equally. Macro-F1 is the primary metric, since the research question concerns individual shelves, including rare ones. ROC AUC and average precision (AP) are also reported; both measure the quality of the ranking before a threshold is applied. Accuracy is not reported. Because 97.1% of book-shelf pairs are negative, a model that never predicts a shelf would attain 97.1% accuracy while being of no use.
+
+# %% [markdown]
+# ### D. Baselines
+#
+# Two baselines involve no learning. The label-prior baseline predicts a shelf whenever more than half of the training books carry it. No shelf is that frequent, so this baseline predicts nothing and attains an F1 of zero, which is the floor any useful model must exceed. The keyword baseline predicts a shelf whenever the shelf name, for example "historical romance", occurs in the description, and tests whether the task can be solved by matching the obvious term. The proposed model is additionally evaluated with the default threshold of probability 0.5, which separates the contribution of the learned weights from that of threshold selection.
+
+# %% [markdown]
+# ### E. Validity
+#
+# The validity of the predictions is assessed in three ways. First, the split guarantees that test books, and all other editions of them, play no part in training or threshold selection. Second, the learned weights are inspected to confirm that the model relies on genre-related terms. Third, because shelf votes are a noisy proxy for genre, the label noise of each shelf is quantified (Section III-D) and related to the model's performance (Section V-C).
+
+# %% [markdown]
+# ## III. Data
+
+# %% [markdown]
+# ### A. Dataset
+#
+# We use the romance subset of the UCSD Goodreads dataset [1], [2], which was collected in late 2017 by crawling public Goodreads shelves. Each record describes one book: its title, authors, description, publication details, rating summary, similar books, and most popular shelves with their vote counts. The file contains neither user identifiers nor reviews, so interaction-based models such as latent factor models and Bayesian personalized ranking cannot be applied, and a content-based approach is required. The dataset is distributed for academic use only and is not included in the repository; the notebook reads a local copy whose path is given in `secret.env`.
+#
+# The code below loads the full file and summarizes each field.
 
 # %% imports
 import gzip
@@ -149,20 +160,20 @@ inside = sum(x in ids for x in sim) / max(len(sim), 1)
 print(f'{len(sim)} links; {inside:.3f} point inside the file')
 
 # %% [markdown]
-# ### What the exploration shows
+# ### B. Exploratory Analysis
 #
-# The file contains 335,449 books. Of these, 90.9% have a non-empty description, with a median length of 147 words, so for most books the model has a full paragraph of text to work with.
+# The file contains 335,449 books, of which 90.9% have a non-empty description. The median description length is 147 words.
 #
-# The remaining metadata is noisy. Publication year is missing for 30% of books and includes impossible values such as 1, 20015, and 65535, which are most likely data-entry errors. Rating counts are highly skewed: the median book has 52 ratings, the mean is 448, and the most-rated book has about 2.08 million. Language codes are missing for 31% of books, and Italian, Spanish, and Indonesian editions each number several thousand, so not every description is in English. Our model reads only the description, so these fields need no cleaning, but the mix of languages is a source of noise in the text itself.
+# The remaining metadata is noisy. Publication year is missing for 30% of books and includes invalid values such as 1, 20015, and 65535, which are most likely entry errors. Rating counts are highly skewed, with a median of 52, a mean of 448, and a maximum of about 2.08 million. Language codes are missing for 31% of books, and Italian, Spanish, and Indonesian editions each number several thousand, so not all descriptions are in English. Since the model reads only the description, these fields require no cleaning; the mixture of languages, however, introduces noise into the text itself.
 #
-# The shelf table shows why the labels need preprocessing. The most-used shelves are `to-read`, `currently-reading`, and `favorites`, which record what a reader did with a book and say nothing about its genre. Genre shelves such as `historical-romance` and `paranormal` appear further down the list. Finally, 83.8% of `similar_books` links point to other books in this file, which would make a link-prediction task possible; we leave that direction for future work.
+# The shelf summary shows why the raw shelves cannot serve as labels directly. The most frequently used shelves, `to-read`, `currently-reading`, and `favorites`, record a reader's interaction with a book and carry no genre information. Genre shelves such as `historical-romance` and `paranormal` rank lower. Finally, 83.8% of `similar_books` links point to books within the file, which would support a link-prediction task; that task is outside the scope of this report.
 
 # %% [markdown]
-# ### 2.2 Constructing labels
+# ### C. Label Construction
 #
-# We turn the raw shelf votes into labels in four steps. First, we remove shelves that do not describe content: reading status (`to-read`), format (`kindle`, `ebook`), ownership (`owned`), and the tags `romance` and `fiction`, which nearly every book in this file carries and which cannot distinguish one book from another. These shelves are listed in `EXCLUDE`, and we call the remaining votes content votes. Second, we keep only books with at least 10 content votes, because with fewer votes a label could be decided by two or three readers. Third, a shelf is a positive label for a book when it receives at least 10% of the book's content votes. Fourth, we select the 15 shelves that are most often positive among the training books. Selecting them from training data alone keeps the test set unseen.
+# Labels were constructed from the raw shelf votes in four steps. First, shelves that do not describe content were removed: reading status (`to-read`), format (`kindle`, `ebook`), ownership (`owned`), and the tags `romance` and `fiction`, which nearly every book in the file carries and which therefore cannot distinguish books from one another. These shelves form the set `EXCLUDE`, and the remaining votes are referred to as content votes. Second, only books with at least 10 content votes were retained, since with fewer votes a label could be determined by two or three readers. Third, a shelf was taken as a positive label for a book when it received at least 10% of the book's content votes. Fourth, the 15 shelves most often positive among the training books were selected as the label set; selecting them from the training data alone keeps the test set unseen.
 #
-# The 10% threshold trades the quality of the labels against their quantity. The sweep below shows that, with 10 required votes, a 5% threshold gives the 15th most common shelf 10,511 positive books, a 10% threshold gives it 3,105, and a 20% threshold only 376. A low threshold admits shelves that only a handful of readers used, while a high threshold leaves too few positive examples to learn from. We use 10%, which keeps several thousand positive examples for every shelf.
+# The 10% threshold trades label quality against label quantity. The sweep below shows that, with 10 required votes, a threshold of 5% gives the 15th most frequent shelf 10,511 positive books, 10% gives 3,105, and 20% gives only 376. A low threshold admits shelves chosen by only a few readers, while a high threshold leaves too few positive examples for training. The 10% threshold retains several thousand positive examples for every shelf.
 
 # %% label rule parameters
 EXCLUDE = {
@@ -217,29 +228,38 @@ print(f'no label: {(Y.sum(1) == 0).mean():.1%} of books; negative book-shelf pai
 pd.DataFrame({'train': Y[tr].mean(0), 'validation': Y[va].mean(0), 'test': Y[te].mean(0)}, index=SHELVES).round(3)
 
 # %% [markdown]
-# After filtering, 299,789 books remain: 191,692 for training, 47,687 for validation, and 60,410 for testing. The labels are sparse. 65.6% of the books carry none of the 15 shelves, the most common shelf (`m-m`) applies to only 6.8% of training books, and the least common (`fantasy`) applies to 1.1%. Shelf frequencies are nearly identical across the three splits, so the split does not shift the label distribution.
+# After filtering, 299,789 books remained: 191,692 for training, 47,687 for validation, and 60,410 for testing. The labels are sparse. Of all books, 65.6% carry none of the 15 shelves; the most frequent shelf, `m-m`, applies to 6.8% of training books and the least frequent, `fantasy`, to 1.1%. Shelf frequencies are nearly identical across the three sets, so the split does not shift the label distribution.
 #
-# Some of the 15 shelves are near-synonyms, such as `historical` and `historical-romance`, because readers use both names. We keep them as separate labels because they are separate shelves on Goodreads, but the overlap is one reason to expect some labels to be unreliable.
+# Several of the 15 shelves are near-synonyms, such as `historical` and `historical-romance`, because readers use both names. They are kept as separate labels because they are separate shelves on Goodreads, but this overlap is one reason to expect some labels to be unreliable.
+
+# %% [markdown]
+# ### D. Label Noise
 #
-# ### 2.3 Measuring label noise
-#
-# A fixed 10% threshold draws a hard line through what is really a continuous vote share. A book that receives 9% of its votes as `contemporary` is labeled negative, while one at 11% is labeled positive, even though readers treated the two books almost the same way. When many books sit just below the line, the labels for that shelf are unstable. We measure this for each shelf as the number of training books just below the threshold (5% to 10% of votes) divided by the number at or above it. A ratio near zero means readers agree about which books belong on the shelf, and a high ratio means that many books split their readers.
+# A fixed threshold of 10% imposes a hard boundary on what is a continuous vote share. A book that receives 9% of its votes as `contemporary` is labeled negative, and one that receives 11% is labeled positive, although readers treated the two books almost identically. When many books lie just below the boundary, the labels of that shelf are unstable. We quantify this effect for each shelf as the ratio of training books just below the threshold, with 5% to 10% of their votes, to books at or above it. A ratio near zero indicates that readers agree on which books belong to the shelf, and a high ratio indicates that many books divide their readers. The lower edge of 5%, half the threshold, was fixed before any model was trained and was not adjusted afterwards. A different band would change the exact values, so the ratio is used only to rank shelves by how contested their labels are.
 
 # %% label noise: books just under the cutoff (5-10% of votes) per book at or above it
 near = ((share[tr] >= 0.05) & (share[tr] < MIN_FRAC)).sum(0) / Y[tr].sum(0)
 pd.Series(near, index=SHELVES).sort_values().round(2)
 
 # %% [markdown]
-# The ratios differ by two orders of magnitude. For `manga` the ratio is 0.03, because readers either shelve a book as manga or they do not. For `contemporary` it is 5.51, which means that for every book labeled `contemporary` there are about five more just under the threshold that are labeled negative. `contemporary-romance` (3.61), `fantasy` (3.30), and `erotica` (2.78) follow. We hypothesize that these high-ratio shelves will be the hardest to predict regardless of the model, because their labels depend partly on where an arbitrary line falls.
+# The ratios span two orders of magnitude. For `manga` the ratio is 0.03, since readers either shelve a book as manga or do not. For `contemporary` it is 5.51, meaning that for every book labeled `contemporary` about five more lie just below the threshold and are labeled negative. `contemporary-romance` (3.61), `fantasy` (3.30), and `erotica` (2.78) follow. We hypothesize that the shelves with high ratios will be the most difficult to predict regardless of the model, because their labels depend in part on where an arbitrary boundary falls.
 
 # %% [markdown]
-# ## 3. Modeling
+# ## IV. Model
+
+# %% [markdown]
+# ### A. Formulation
 #
-# ### 3.1 Formulation
+# The task is formulated as 15 independent binary classification problems over a shared representation of the text. For shelf $j$ and a book with feature vector $x$, the model computes the score
 #
-# We formulate the task as 15 independent binary classification problems that share a single representation of the text. For shelf $j$ and a book with feature vector $x$, the model computes a score $s_j(x) = w_j^\top x + b_j$ and predicts the shelf when the score exceeds a threshold $t_j$. Treating the shelves independently ignores correlations between them, such as the overlap between `historical` and `historical-romance`, but it keeps the model simple to train and to interpret.
+# $$s_j(x) = w_j^\top x + b_j \tag{1}$$
 #
-# The next cells define the evaluation code and run the two baselines, which require no training. `best_cutoff` chooses, for one shelf, the threshold that maximizes F1 on the validation set by scanning every distinct score. `scores` computes the metrics from section 1 on the test set.
+# and predicts the shelf when $s_j(x)$ exceeds a threshold $t_j$. Treating the shelves independently ignores correlations between them, such as the overlap between `historical` and `historical-romance`, but keeps the model simple to train and to interpret.
+
+# %% [markdown]
+# ### B. Evaluation Procedure and Baselines
+#
+# The code below implements the evaluation and the two baselines, which require no training. The function `best_cutoff` selects, for one shelf, the threshold that maximizes F1 on the validation set by scanning every distinct score. The function `scores` computes the metrics of Section II-C on the test set.
 
 # %% metrics
 def best_cutoff(y, s):
@@ -273,11 +293,11 @@ def keyword(texts):
 results['shelf name in text'] = scores(Y[te], keyword(elig['description'].iloc[te]), 0.5)
 
 # %% [markdown]
-# ### 3.2 Text representation
+# ### C. Text Representation
 #
-# We represent each description with TF-IDF features. The term frequency counts how often a term appears in a description, and the inverse document frequency down-weights terms that appear in many descriptions. Words that appear in nearly every romance blurb, such as "love" or "life", therefore contribute little, while distinctive words such as "duke" or "vampire" contribute more. We use two kinds of terms. Word unigrams and bigrams (50,000 features, with English stop words removed) capture topical vocabulary and multi-word names such as series titles. Character 3- to 5-grams (60,000 features, given half weight) capture fragments of words, which help with names, inflected forms, and descriptions in other languages. Both vectorizers are fit on the training descriptions only.
+# Each description is represented by TF-IDF features. The term frequency counts the occurrences of a term in a description, and the inverse document frequency down-weights terms that occur in many descriptions. Terms that occur in nearly every romance description, such as "love" or "life", therefore contribute little, while distinctive terms such as "duke" or "vampire" contribute more. Two kinds of terms are used. Word unigrams and bigrams (50,000 features, English stop words removed) capture topical vocabulary and multi-word names such as series titles. Character 3- to 5-grams (60,000 features, weighted by 0.5) capture fragments of words, which help with names, inflected forms, and descriptions in other languages. Both vectorizers were fit on the training descriptions only. The vocabulary sizes, the minimum document frequency of 5, and the weight on character features were fixed in our group's earlier experiments and were not tuned here. A description contains many more distinct character sequences than words, and the weight of 0.5 prevents the character features from dominating the word features.
 #
-# This representation assumes that genre is expressed by which words appear, independent of their order. The assumption is reasonable for genres with a characteristic vocabulary, but it cannot capture meaning that depends on word order, or information that a description leaves out.
+# This representation assumes that genre is expressed by which terms occur, independent of their order. The assumption is reasonable for genres with a characteristic vocabulary, but the representation cannot capture meaning that depends on word order or information that a description omits.
 
 # %% features (fit on training books only)
 word = TfidfVectorizer(max_features=50_000, ngram_range=(1, 2), min_df=5, stop_words='english',
@@ -298,13 +318,14 @@ FEATURES = np.r_[word.get_feature_names_out(), char.get_feature_names_out()]
 print(X_tr.shape, f'{X_tr.nnz / X_tr.shape[0]:.0f} nonzero features per book')
 
 # %% [markdown]
-# ### 3.3 Classifier
+# ### D. Classifier
 #
-# We train one logistic regression per shelf, implemented as a single linear layer with 15 outputs in PyTorch so that it runs on a GPU. The loss is the binary cross-entropy over all shelves plus an L2 penalty on the weights, which is the objective of scikit-learn's `LogisticRegression(C=1, class_weight='balanced')` divided by the number of training books. Balanced class weights increase the loss on positive examples in proportion to their rarity. Without them, the model could reach a low loss by predicting no shelves at all, since 97% of the targets are negative. We optimize with Adam on mini-batches of 4,096 books for 8 epochs. Each book uses only about 1,200 of the 110,000 features, so we keep the feature matrix in sparse form, which fits in the memory of an 8 GB laptop GPU.
+# One logistic regression per shelf was trained, implemented in PyTorch as a single linear layer with 15 outputs so that it runs on a GPU. The loss is the binary cross-entropy over all shelves plus an $L_2$ penalty on the weights; it equals the objective of scikit-learn's `LogisticRegression(C=1, class_weight='balanced')` divided by the number of training books. Balanced class weights scale the loss of positive examples in proportion to their rarity. Without them, the model could attain a low loss by predicting no shelves, since 97% of the targets are negative. Optimization used Adam with a learning rate of 0.01 on mini-batches of 4,096 books for 8 epochs. These settings were chosen for speed and memory and were not tuned. Each book uses about 1,200 of the 110,000 features, so the feature matrix is stored in sparse form, which fits in the 8 GB memory of a laptop GPU.
+
+# %% [markdown]
+# ### E. Model Selection
 #
-# ### Choice of model
-#
-# We chose logistic regression on TF-IDF features because it is a well-established baseline for text classification [3], it is part of the course material, it trains in minutes on 190,000 documents, and its weights can be read directly, which lets us check in section 4 whether the model relies on sensible evidence. In earlier experiments, our group compared eight scikit-learn configurations on validation macro-F1. They varied the features (words only, or words and characters), the regularization strength (`C` of 0.25, 1, or 4), class weighting, and the classifier (logistic regression or a linear SVM). Logistic regression with word and character features and `C=1` performed best, and this notebook uses that configuration. Models that read word order, such as fine-tuned transformers, might capture more of a description's meaning, but they are far more expensive to train on this many documents, and we did not evaluate them.
+# Logistic regression on TF-IDF features was chosen because it is an established baseline for text classification [3], it is part of the course material, it trains in minutes on 190,000 documents, and its weights can be inspected directly, which Section V-D uses to check the evidence the model relies on. In earlier experiments, our group compared eight scikit-learn configurations by validation macro-F1. The configurations varied the features (words only, or words and characters), the regularization strength ($C \in \{0.25, 1, 4\}$), class weighting, and the classifier (logistic regression or a linear SVM). Logistic regression with word and character features and $C = 1$ performed best and is the configuration used here. Models that use word order, such as fine-tuned transformers, may capture more of a description's meaning, but they are considerably more expensive to train on this corpus and were not evaluated.
 
 # %% logistic regression on the GPU
 # Same objective as sklearn's LogisticRegression(C=1, class_weight='balanced'), divided by n:
@@ -354,13 +375,17 @@ W, b = fit_lr(X_tr, Y[tr])
 S_va, S_te = decision(X_va, W, b), decision(X_te, W, b)
 
 # %% [markdown]
-# The training loss is still decreasing at the eighth epoch, so this model has not fully converged. In our earlier experiments, scikit-learn's solver fit the same objective to convergence and reached a test macro-F1 of 0.484, against 0.454 here. The results below are therefore a slight underestimate of what this model can achieve.
+# ### F. Convergence
 #
-# ## 4. Evaluation
+# The training loss was still decreasing at the eighth epoch, so the model had not fully converged. In our group's earlier experiments, scikit-learn's solver fit the same objective to convergence and reached a test macro-F1 of 0.484, compared with 0.454 here. The results in Section V are therefore a slight underestimate of what this model can achieve, and the untuned optimizer settings are the most likely source of the difference.
+
+# %% [markdown]
+# ## V. Evaluation
+
+# %% [markdown]
+# ### A. Overall Results
 #
-# ### 4.1 Overall results
-#
-# We now choose each shelf's threshold on the validation set and evaluate every model once on the test set.
+# The threshold of each shelf was selected on the validation set, and every model was evaluated once on the test set. The resulting scores are listed below.
 
 # %% cutoffs: one per shelf, chosen on validation; the default is logit 0 (probability 0.5)
 cut = np.array([best_cutoff(Y[va][:, j], S_va[:, j]) for j in range(K)])
@@ -369,11 +394,11 @@ results['model, cutoff per shelf'] = scores(Y[te], S_te, cut)
 pd.DataFrame(results).T.round(3)
 
 # %% [markdown]
-# The results answer the first part of our question: the description carries substantial information about a book's shelves, far more than an obvious keyword rule can extract. The label prior scores zero, as expected. Searching the description for the shelf's name reaches a macro-F1 of only 0.106, because reader-invented shelf names rarely appear in publisher text; a book that readers shelve as `contemporary` almost never calls itself contemporary. The learned model reaches a macro-F1 of 0.454 and a micro-F1 of 0.480, more than four times the keyword baseline.
+# The description carries substantial information about a book's shelves, well beyond what a keyword rule extracts. The label prior scores zero, as expected. The keyword baseline reaches a macro-F1 of only 0.106, because reader-defined shelf names rarely occur in publisher descriptions; a book shelved as `contemporary` seldom describes itself as contemporary. The learned model reaches a macro-F1 of 0.454 and a micro-F1 of 0.480, more than four times the keyword baseline.
 #
-# Threshold tuning matters as much as the learned weights. With the default threshold of 0.5, the balanced class weights make the model generous: it predicts 1.59 shelves per book, while books carry about 0.44 on average, and its macro-F1 is 0.341. Thresholds tuned on validation reduce this to 0.61 shelves per book and raise macro-F1 to 0.454. AUC does not depend on the threshold, which is why it is identical in both rows.
+# Threshold selection contributes as much as the learned weights. At the default threshold of 0.5, the balanced class weights make the model over-predict: it assigns 1.59 shelves per book, whereas books carry about 0.44 on average, and its macro-F1 is 0.341. Thresholds selected on the validation set reduce the rate to 0.61 shelves per book and raise macro-F1 to 0.454. AUC is independent of the threshold and is therefore identical in both rows.
 #
-# The gap between AUC and AP shows what kind of errors remain. An AUC of 0.933 means that, for a given shelf, a randomly chosen book that has the shelf receives a higher score than a randomly chosen book that does not about 93% of the time, averaged over shelves. In other words, the model ranks books well. AP, at 0.397, reflects how many of the highest-ranked books are correct, and it is much lower because positives are rare. Even a small error rate on the large number of negative books is enough to fill the top of the ranking with false positives.
+# The difference between AUC and AP characterizes the remaining errors. An AUC of 0.933 means that, averaged over shelves, a randomly chosen book that carries a shelf receives a higher score than a randomly chosen book that does not about 93% of the time; the ranking is good. AP, at 0.397, reflects the precision among the highest-ranked books and is much lower because positives are rare. A small error rate on the large number of negative books suffices to place many false positives at the top of the ranking.
 
 # %% per shelf (test)
 P = S_te >= cut
@@ -388,11 +413,11 @@ per_shelf = pd.DataFrame({
 per_shelf.sort_values('f1').round(3)
 
 # %% [markdown]
-# ### 4.2 Results by shelf
+# ### B. Per-Shelf Results
 #
-# The average hides large differences between shelves. `manga` reaches an F1 of 0.812: 86% of the books the model shelves as manga are manga, and it finds 77% of all manga in the test set. `historical-romance` (0.685) and `m-m` (0.627) also perform well. At the other end, `contemporary` reaches an F1 of 0.244, with only 19% of its predictions correct, and `contemporary-romance` reaches 0.279. These two shelves also have the lowest AUC (0.834 and 0.859). A low AUC means the model cannot separate their books from the rest even in its ranking, so no choice of threshold would fix them.
+# The average conceals large differences between shelves. `manga` reaches an F1 of 0.812, with a precision of 0.86 and a recall of 0.77. `historical-romance` (0.685) and `m-m` (0.627) also perform well. At the other extreme, `contemporary` reaches an F1 of 0.244 with a precision of 0.19, and `contemporary-romance` reaches 0.279. These two shelves also have the lowest AUC (0.834 and 0.859). A low AUC indicates that the model fails to separate their books from the rest even in its ranking, so no choice of threshold can correct them.
 #
-# To the question of whether the model can predict a book's shelf from its description, the per-shelf results give a split answer. For genres with a distinctive vocabulary it can, with useful precision and recall. For genres such as `contemporary` it largely cannot. The next cell tests why.
+# The per-shelf results thus give a qualified answer to the research question. For shelves with a distinctive vocabulary, the description predicts the shelf with useful precision and recall; for shelves such as `contemporary`, it largely does not. The next analysis examines the cause.
 
 # %% does label noise or label count explain per-shelf F1?
 rho_noise = spearmanr(per_shelf['near_cutoff_ratio'], per_shelf['f1'])[0]
@@ -400,11 +425,11 @@ rho_count = spearmanr(per_shelf['test_positives'], per_shelf['f1'])[0]
 print(f'rank correlation with F1: near-cutoff ratio {rho_noise:+.2f}, test positives {rho_count:+.2f}')
 
 # %% [markdown]
-# ### 4.3 Why some shelves fail
+# ### C. Label Noise and Performance
 #
-# We test the hypothesis from section 2.3 by comparing each shelf's label-noise ratio with its test F1. The Spearman rank correlation across the 15 shelves is -0.82: the shelves on which readers disagree most are the shelves the model predicts worst. The number of positive test books, in contrast, is only weakly related to F1 (+0.23), so the weak shelves are not weak simply because they are small. For example, `contemporary` has 1,833 positive test books and `historical` has 2,307, a similar number, yet `historical` reaches an F1 of 0.525 and `contemporary` only 0.244.
+# The hypothesis of Section III-D was tested by comparing each shelf's label-noise ratio with its test F1. Spearman's rank correlation was used because only 15 shelves are available, the ratio is heavily skewed (from 0.03 to 5.51), and the question is whether noisier shelves score lower, irrespective of the functional form of the relationship. The correlation is $\rho = -0.82$: the shelves on which readers disagree most are those the model predicts worst. The number of positive test books is only weakly related to F1 ($\rho = +0.23$), so the weak shelves are not weak merely because they are small. For example, `contemporary` and `historical` have a similar number of positive test books (1,833 and 2,307), yet their F1 scores are 0.244 and 0.525.
 #
-# This suggests that the ceiling on these shelves comes mainly from the labels. If readers themselves do not agree on whether a book is `contemporary`, a classifier trained to reproduce their votes inherits that disagreement. With only 15 shelves, the correlation is suggestive and not conclusive, and it does not rule out other explanations, such as the lack of a distinctive vocabulary that we turn to next.
+# These results suggest that the performance ceiling on these shelves is set mainly by the labels. If readers do not agree on whether a book is `contemporary`, a classifier trained to reproduce their votes inherits that disagreement. With 15 shelves, the correlation is suggestive rather than conclusive, and it does not exclude other explanations, such as the absence of a distinctive vocabulary discussed next.
 
 # %% strongest features per shelf
 Wn = W.cpu().numpy()
@@ -412,35 +437,41 @@ top = pd.DataFrame([FEATURES[np.argsort(-Wn[:, j])[:8]] for j in range(K)], inde
 print(top.to_string(header=False))
 
 # %% [markdown]
-# ### 4.4 What the model learned
+# ### D. Learned Features
 #
-# The table above lists the eight terms with the largest positive weight for each shelf. For the well-predicted shelves, these are the terms a human reader would expect. `historical-romance` relies on lady, earl, lord, and duke; `bdsm` on dom, master, and submissive; `manga` on the word manga and fragments of Japanese names; and `m-m` on gay and male pronouns. The model uses genre evidence on these shelves, which supports the validity of its predictions there.
+# The output above lists the eight terms with the largest positive weight for each shelf. For the well-predicted shelves, these are the terms a human reader would expect: `historical-romance` relies on *lady*, *earl*, *lord*, and *duke*; `bdsm` on *dom*, *master*, and *submissive*; `manga` on the word *manga* and fragments of Japanese names; and `m-m` on *gay* and male pronouns. The model therefore bases its predictions for these shelves on genre evidence, which supports their validity.
 #
-# For `contemporary` and `contemporary-romance`, the strongest terms are the names of particular series and places, such as Virgin River, Idaho, and Lucky Harbor. A contemporary romance is marked mainly by the absence of other markers, a present-day setting with no historical or supernatural elements, so the genre has little vocabulary of its own, and the model falls back on memorizing popular series. That strategy cannot generalize to a standalone novel. A few character-level features, such as single punctuation marks, also appear among the top terms, which suggests the model picks up formatting habits of particular publishers.
-#
-# ### 4.5 Errors and limitations
-#
-# In an earlier run of the same kind of model, our group read ten of the most confident errors alongside their descriptions and vote counts. Most of them were not failures to understand the text. In some cases, readers had split their votes across spellings (`manga`, `mangas`, `manga-manhwa`), so the exact shelf stayed under 10% even though the description fits it. In others, a sibling shelf such as `contemporary-romance` was positive while `contemporary` fell just below the threshold, or the label rested on two to five votes for a book whose description was about something else. Three of the ten were cases where the description never mentioned the relevant fact, such as a manga volume whose stored description is a prose plot summary. Ten examples chosen for high confidence show which kinds of errors occur, but not how often each kind occurs.
-#
-# The setup has further limitations. The labels are a single snapshot of reader votes that nobody verified, so any measured performance is bounded by their quality. The books we evaluate already have at least 10 genre votes and are more established than a typical new release. The model ignores correlations between shelves, and we keep near-duplicate shelves separate. In the earlier run, merging the three pairs of near-duplicate shelves into 12 labels raised the scores, but that answers an easier question and does not reflect a better model.
-#
-# ### 4.6 Answer to the research question
-#
-# Based on its description alone, a TF-IDF model can predict a romance book's shelves well when the shelf corresponds to a distinctive vocabulary, as with manga, historical romance, or m/m romance, where F1 ranges from 0.63 to 0.81. It predicts poorly when the shelf is one that readers apply inconsistently, as with contemporary romance, where F1 stays below 0.3. Across all 15 shelves, the model scores more than four times higher than a keyword rule, and the strongest predictor of where it fails is disagreement among readers about the label, not the amount of training data. For a cold-start system, this means that descriptions are a reliable source of genre tags for some shelves and an unreliable one for others.
+# For `contemporary` and `contemporary-romance`, the strongest terms are names of particular series and places, such as *Virgin River*, *Idaho*, and *Lucky Harbor*. We hypothesize that contemporary romance has little vocabulary of its own, because it is defined mainly by the absence of other markers, namely a present-day setting without historical or supernatural elements. The weights are consistent with this hypothesis, since the model's strongest evidence for these shelves consists of popular series, which cannot generalize to a standalone novel; the hypothesis was not tested directly. A few character-level features, such as single punctuation marks, also rank among the top terms. They may reflect the formatting conventions of particular publishers, which was not verified.
 
 # %% [markdown]
-# ## 5. Related work
+# ### E. Error Analysis
 #
-# The dataset was introduced by Wan and McAuley [1], who used Goodreads interactions to study recommendation when a user's actions form a monotonic chain: shelving a book, reading it, rating it, and recommending it. Their models learn from users' past interactions with each item, which a newly released book does not yet have. Our work addresses the complementary, item-side problem of characterizing a new book from its own content. Wan et al. [2] used reviews from the same crawl for fine-grained spoiler detection, a classification task on review sentences. Our romance file contains descriptions and no reviews, so we cannot compare with that task directly.
+# In an earlier run of the same kind of model, our group examined ten of the most confident errors together with their descriptions and vote counts. Most were not failures to interpret the text. In some cases, readers had split their votes across spellings (`manga`, `mangas`, `manga-manhwa`), so the exact shelf remained below 10% even though the description matched it. In others, a sibling shelf such as `contemporary-romance` was positive while `contemporary` fell just below the threshold, or the label rested on two to five votes for a book whose description concerned something else. Three of the ten errors were cases in which the description did not mention the relevant fact, such as a manga volume whose stored description is a prose plot summary. Because the ten examples were selected for high confidence, they indicate which kinds of errors occur but not their frequency.
+
+# %% [markdown]
+# ### F. Limitations
 #
-# On the modeling side, Wang and Manning [3] showed that linear classifiers over word unigram and bigram features, such as Naive Bayes and linear SVMs, are strong baselines for sentiment and topic classification, and that bigrams help. Our results are consistent with theirs. A linear model over TF-IDF features performs far above trivial baselines, and in our group's earlier experiments, adding character n-grams to word features raised macro-F1 by 0.022. Wang and Manning also note that bag-of-words models cannot capture meaning that arises from how words combine. Our error analysis points to a different limit: many errors come from the labels themselves, or from information that is absent from the description and that no text model could recover.
+# The labels are a single, unverified snapshot of reader votes, so measured performance is bounded by their quality. The evaluated books already have at least 10 genre votes and are more established than a typical new release. The model ignores correlations between shelves, and near-duplicate shelves are kept separate. In the earlier run, merging the three pairs of near-duplicate shelves into 12 labels raised the scores, but this changes the task to an easier one and does not indicate a better model. Finally, the optimizer settings were not tuned and the model had not converged (Section IV-F).
+
+# %% [markdown]
+# ## VI. Related Work
 #
-# We are not aware of published results for shelf prediction on this dataset, so we cannot compare our F1 scores with prior work directly; our comparison points are the baselines in section 4.
+# The dataset was introduced by Wan and McAuley [1], who used Goodreads interactions to study recommendation when a user's actions form a monotonic chain of shelving, reading, rating, and recommending a book. Their models learn from users' past interactions with each item, which a newly released book lacks. The present work addresses the complementary, item-side problem of characterizing a new book from its own content. Wan et al. [2] used reviews from the same crawl for fine-grained spoiler detection, a classification task on review sentences. The romance file contains descriptions and no reviews, so a direct comparison with that task is not possible.
 #
-# ### References
+# Wang and Manning [3] showed that linear classifiers over word unigrams and bigrams, such as naive Bayes and linear support vector machines, are strong baselines for sentiment and topic classification, and that bigrams improve performance. Our results are consistent with theirs: a linear model over TF-IDF features performs well above trivial baselines, and in our group's earlier experiments, adding character n-grams to word features raised macro-F1 by 0.022. Wang and Manning also note that bag-of-words models cannot capture meaning arising from the composition of words. Our error analysis indicates a different limitation, namely that many errors originate in the labels or in information absent from the description, which no model of the text can recover.
 #
-# [1] Mengting Wan and Julian McAuley. 2018. Item Recommendation on Monotonic Behavior Chains. In *Proceedings of the 12th ACM Conference on Recommender Systems (RecSys '18)*. ACM, 86-94. https://doi.org/10.1145/3240323.3240369
+# We are not aware of published results for shelf prediction on this dataset, so our F1 scores cannot be compared with prior work directly; the baselines of Section II-D serve as the points of comparison.
+
+# %% [markdown]
+# ## VII. Conclusion
 #
-# [2] Mengting Wan, Rishabh Misra, Ndapa Nakashole, and Julian McAuley. 2019. Fine-Grained Spoiler Detection from Large-Scale Review Corpora. In *Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics*, 2605-2610. https://aclanthology.org/P19-1248/
+# Given only its description, a TF-IDF model predicts a romance book's shelves well when the shelf corresponds to a distinctive vocabulary, as for `manga`, `historical-romance`, and `m-m`, with F1 between 0.63 and 0.81. It predicts poorly when readers apply the shelf inconsistently, as for `contemporary`, with F1 below 0.3. Across all 15 shelves, the model scores more than four times higher than a keyword baseline, and the strongest predictor of where it fails is reader disagreement about the label rather than the amount of training data. For a cold-start system, descriptions are therefore a reliable source of genre tags for some shelves and an unreliable one for others.
+
+# %% [markdown]
+# ## References
 #
-# [3] Sida Wang and Christopher D. Manning. 2012. Baselines and Bigrams: Simple, Good Sentiment and Topic Classification. In *Proceedings of the 50th Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers)*, 90-94. https://aclanthology.org/P12-2018/
+# [1] M. Wan and J. McAuley, "Item recommendation on monotonic behavior chains," in *Proc. 12th ACM Conf. Recommender Systems (RecSys)*, 2018, pp. 86-94, doi: 10.1145/3240323.3240369.
+#
+# [2] M. Wan, R. Misra, N. Nakashole, and J. McAuley, "Fine-grained spoiler detection from large-scale review corpora," in *Proc. 57th Annu. Meeting Assoc. Computational Linguistics (ACL)*, 2019, pp. 2605-2610. [Online]. Available: https://aclanthology.org/P19-1248/
+#
+# [3] S. Wang and C. D. Manning, "Baselines and bigrams: Simple, good sentiment and topic classification," in *Proc. 50th Annu. Meeting Assoc. Computational Linguistics (ACL), Vol. 2: Short Papers*, 2012, pp. 90-94. [Online]. Available: https://aclanthology.org/P12-2018/
