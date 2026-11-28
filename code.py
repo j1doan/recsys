@@ -39,7 +39,7 @@
 # %% [markdown]
 # ### D. Baselines
 #
-# Two baselines involve no learning. The label-prior baseline predicts a shelf whenever more than half of the training books carry it. No shelf is that frequent, so this baseline predicts nothing and attains an F1 of zero, which is the floor any useful model must exceed. The keyword baseline predicts a shelf whenever the shelf name, for example "historical romance", occurs in the description, and tests whether the task can be solved by matching the obvious term. The proposed model is additionally evaluated with the default threshold of probability 0.5, which separates the contribution of the learned weights from that of threshold selection.
+# Three baselines involve no learning. The label-prior baseline predicts a shelf whenever more than half of the training books carry it. No shelf is that frequent, so this baseline predicts nothing and attains an F1 of zero, which is the floor any useful model must exceed. The every-shelf baseline predicts all 15 shelves for every book; it attains a recall of 1, and its F1 on a shelf with positive rate $p$ is $2p/(1+p)$, so it shows the score obtainable without reading the text. The keyword baseline predicts a shelf whenever the shelf name, for example "historical romance", occurs in the description, and tests whether the task can be solved by matching the obvious term. The proposed model is additionally evaluated with the default threshold of probability 0.5, which separates the contribution of the learned weights from that of threshold selection.
 
 # %% [markdown]
 # ### E. Validity
@@ -63,16 +63,18 @@ import os
 import re
 from collections import Counter
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
 from dotenv import find_dotenv, load_dotenv
-from scipy.sparse import hstack
+from scipy.sparse import csr_matrix, hstack
 from scipy.stats import spearmanr
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import (
     average_precision_score,
     f1_score,
+    precision_recall_curve,
     precision_score,
     recall_score,
     roc_auc_score,
@@ -82,6 +84,24 @@ from sklearn.model_selection import GroupShuffleSplit
 # %% dotenv
 load_dotenv(find_dotenv('secret.env', usecwd=True))
 PATH = os.environ['GOODREADS_PATH']
+
+# %% plot style: one neutral color for all shelves, three focus shelves keep the same color in every figure
+os.makedirs('figs', exist_ok=True)
+plt.rcParams.update({'font.size': 9, 'axes.spines.top': False, 'axes.spines.right': False,
+                     'axes.edgecolor': '#666666', 'axes.grid': True, 'grid.color': '#e6e6e6',
+                     'axes.axisbelow': True, 'savefig.bbox': 'tight'})
+GRAY = '#b3b3b3'
+FOCUS = {'manga': '#257de0', 'historical-romance': '#f47230', 'contemporary': '#00b894'}
+
+
+def color(shelf):
+    return FOCUS.get(shelf, GRAY)
+
+
+def save(n):
+    plt.tight_layout()
+    plt.savefig(f'figs/fig{n}.png', dpi=200)
+    plt.show()
 
 # %% load
 # set LIMIT (e.g. 50_000) for a quick pass
@@ -96,8 +116,8 @@ df = pd.DataFrame(rows)
 del rows
 print(df.shape)
 
-# %% first record
-df.iloc[0].to_dict()
+# %% first record (long fields cut to 80 characters)
+df.iloc[0].astype(str).str.slice(0, 80)
 
 # %% coverage: share of non-empty values per column
 empty = df.map(lambda v: v in ('', None) or (isinstance(v, list) and not v))
@@ -149,7 +169,8 @@ print(f'{len(s)} series; books per series: {s_stats}')
 
 # %% descriptions
 d = df['description'].replace('', pd.NA).dropna()
-d_words = d.str.split().str.len().describe()[['mean', '50%', 'max']].round(0).to_dict()
+n_words = d.str.split().str.len()
+d_words = n_words.describe()[['mean', '50%', 'max']].round(0).to_dict()
 print(f'{len(d)} with description; words: {d_words}')
 d.iloc[:3].tolist()
 
@@ -159,10 +180,23 @@ sim = [x for lst in df['similar_books'] for x in lst]
 inside = sum(x in ids for x in sim) / max(len(sim), 1)
 print(f'{len(sim)} links; {inside:.3f} point inside the file')
 
+# %% Fig. 1: words per description
+fig, ax = plt.subplots(figsize=(6, 3))
+ax.hist(n_words, bins=np.logspace(0, np.log10(n_words.max()), 60), color=GRAY, edgecolor='white', linewidth=0.5)
+ax.axvline(n_words.median(), color='#191919', linewidth=1)
+ax.annotate(f'median {n_words.median():.0f}', (n_words.median(), ax.get_ylim()[1] * 0.9), xytext=(4, 0),
+            textcoords='offset points')
+ax.set(xscale='log', xlabel='words per description (log scale)', ylabel='books')
+ax.grid(axis='x', visible=False)
+save(1)
+
+# %% [markdown]
+# *Fig. 1. Distribution of description length over the books with a description, in words, on a logarithmic axis. The vertical line marks the median.*
+
 # %% [markdown]
 # ### B. Exploratory Analysis
 #
-# The file contains 335,449 books, of which 90.9% have a non-empty description. The median description length is 147 words.
+# The file contains 335,449 books, of which 90.9% have a non-empty description. The median description length is 147 words, and most descriptions are a paragraph or longer (Fig. 1).
 #
 # The remaining metadata is noisy. Publication year is missing for 30% of books and includes invalid values such as 1, 20015, and 65535, which are most likely entry errors. Rating counts are highly skewed, with a median of 52, a mean of 448, and a maximum of about 2.08 million. Language codes are missing for 31% of books, and Italian, Spanish, and Indonesian editions each number several thousand, so not all descriptions are in English. Since the model reads only the description, these fields require no cleaning; the mixture of languages, however, introduces noise into the text itself.
 #
@@ -225,12 +259,47 @@ SHELVES = [n for n, _ in c.most_common(K)]
 share = np.array([[d.get(s, 0) / v for s in SHELVES] for d, v in zip(elig['sh'], elig['sh_votes'])])
 Y = (share >= MIN_FRAC).astype(np.float32)
 print(f'no label: {(Y.sum(1) == 0).mean():.1%} of books; negative book-shelf pairs: {1 - Y.mean():.1%}')
-pd.DataFrame({'train': Y[tr].mean(0), 'validation': Y[va].mean(0), 'test': Y[te].mean(0)}, index=SHELVES).round(3)
+rate = pd.DataFrame({'train': Y[tr].mean(0), 'validation': Y[va].mean(0), 'test': Y[te].mean(0)}, index=SHELVES)
+rate.round(3)
+
+# %% Fig. 2: share of books that carry each shelf, by split
+fig, ax = plt.subplots(figsize=(6, 4))
+y = np.arange(K)
+ax.barh(y, 100 * rate['train'], color=[color(s) for s in SHELVES], height=0.7, label='train')
+ax.scatter(100 * rate['validation'], y, marker='o', s=30, facecolors='none', edgecolors='#191919', label='validation')
+ax.scatter(100 * rate['test'], y, marker='x', s=30, color='#191919', label='test')
+ax.set(yticks=y, yticklabels=SHELVES, xlabel='books carrying the shelf (%)')
+ax.invert_yaxis()
+ax.grid(axis='y', visible=False)
+ax.legend(loc='lower right', frameon=False)
+save(2)
 
 # %% [markdown]
-# After filtering, 299,789 books remained: 191,692 for training, 47,687 for validation, and 60,410 for testing. The labels are sparse. Of all books, 65.6% carry none of the 15 shelves; the most frequent shelf, `m-m`, applies to 6.8% of training books and the least frequent, `fantasy`, to 1.1%. Shelf frequencies are nearly identical across the three sets, so the split does not shift the label distribution.
+# *Fig. 2. Percentage of books that carry each shelf, in the training set (bars), validation set (circles), and test set (crosses). Shelves are ordered by frequency in the training set; the three shelves discussed in Section V are colored.*
+
+# %% Fig. 3: shelf co-occurrence, P(column shelf | row shelf), training books
+co = Y[tr].T @ Y[tr]
+cond = co / np.diag(co)[:, None]
+np.fill_diagonal(cond, np.nan)  # diagonal is 1 by definition and would set the color scale
+fig, ax = plt.subplots(figsize=(6.5, 5.5))
+im = ax.imshow(cond, cmap='Blues', vmin=0)
+for i, j in zip(*np.nonzero(np.nan_to_num(cond) >= 0.2)):
+    ax.text(j, i, f'{cond[i, j]:.2f}', ha='center', va='center', fontsize=7,
+            color='white' if cond[i, j] > 0.5 * np.nanmax(cond) else '#191919')
+ax.set(xticks=range(K), yticks=range(K), xlabel='shelf B', ylabel='shelf A')
+ax.set_xticklabels(SHELVES, rotation=60, ha='right')
+ax.set_yticklabels(SHELVES)
+ax.grid(False)
+fig.colorbar(im, ax=ax, shrink=0.8, label='P(shelf B | shelf A)')
+save(3)
+
+# %% [markdown]
+# *Fig. 3. Co-occurrence of shelves among training books. Each cell gives the fraction of books labeled with the row shelf (A) that also carry the column shelf (B); values of 0.2 or more are printed, and the diagonal is left blank.*
+
+# %% [markdown]
+# After filtering, 299,789 books remained: 191,692 for training, 47,687 for validation, and 60,410 for testing. The labels are sparse. Of all books, 65.6% carry none of the 15 shelves; the most frequent shelf, `m-m`, applies to 6.8% of training books and the least frequent, `fantasy`, to 1.1%. Shelf frequencies are nearly identical across the three sets (Fig. 2), so the split does not shift the label distribution.
 #
-# Several of the 15 shelves are near-synonyms, such as `historical` and `historical-romance`, because readers use both names. They are kept as separate labels because they are separate shelves on Goodreads, but this overlap is one reason to expect some labels to be unreliable.
+# Several of the 15 shelves are near-synonyms, such as `historical` and `historical-romance`, because readers use both names, and such pairs co-occur on many books (Fig. 3). They are kept as separate labels because they are separate shelves on Goodreads, but this overlap is one reason to expect some labels to be unreliable.
 
 # %% [markdown]
 # ### D. Label Noise
@@ -240,6 +309,24 @@ pd.DataFrame({'train': Y[tr].mean(0), 'validation': Y[va].mean(0), 'test': Y[te]
 # %% label noise: books just under the cutoff (5-10% of votes) per book at or above it
 near = ((share[tr] >= 0.05) & (share[tr] < MIN_FRAC)).sum(0) / Y[tr].sum(0)
 pd.Series(near, index=SHELVES).sort_values().round(2)
+
+# %% Fig. 4: vote share of the focus shelves near the 10% threshold (training books with a share of at least 1%)
+focus = [s for s in FOCUS if s in SHELVES]
+fig, axes = plt.subplots(1, len(focus), figsize=(7, 2.6), sharex=True, sharey=True, squeeze=False)
+bins = np.arange(0.01, 0.305, 0.01)
+for ax, s in zip(axes[0], focus):
+    j = SHELVES.index(s)
+    counts, _ = np.histogram(share[tr][:, j], bins=bins)
+    ax.bar(100 * bins[:-1], counts / Y[tr][:, j].sum(), width=0.9, align='edge', color=FOCUS[s])
+    ax.axvspan(5, 10, color='#191919', alpha=0.06, linewidth=0)
+    ax.axvline(10, color='#191919', linewidth=1)
+    ax.set(title=f'{s}\nnear-cutoff ratio {near[j]:.2f}', xlabel='share of content votes (%)')
+    ax.grid(axis='x', visible=False)
+axes[0][0].set_ylabel('books per labeled book')
+save(4)
+
+# %% [markdown]
+# *Fig. 4. Distribution of a shelf's share of a book's content votes among training books, for the three focus shelves. Bars are one percentage point wide and are divided by the number of books labeled with the shelf. The vertical line marks the 10% threshold, and the shaded band marks the 5% to 10% range used in the near-cutoff ratio.*
 
 # %% [markdown]
 # The ratios span two orders of magnitude. For `manga` the ratio is 0.03, since readers either shelve a book as manga or do not. For `contemporary` it is 5.51, meaning that for every book labeled `contemporary` about five more lie just below the threshold and are labeled negative. `contemporary-romance` (3.61), `fantasy` (3.30), and `erotica` (2.78) follow. We hypothesize that the shelves with high ratios will be the most difficult to predict regardless of the model, because their labels depend in part on where an arbitrary boundary falls.
@@ -285,12 +372,16 @@ results = {}
 prior = Y[tr].mean(0)
 results['label prior'] = scores(Y[te], np.tile(prior, (len(te), 1)), 0.5)
 
-# %% baseline 2: the shelf name appears in the description
+# %% baseline 2: predict every shelf for every book (recall 1, F1 = 2p / (1 + p) per shelf)
+results['every shelf'] = scores(Y[te], np.ones((len(te), K)), 0.5)
+
+# %% baseline 3: the shelf name appears in the description
 def keyword(texts):
     norm = [' ' + re.sub(r'[^\w]+', ' ', t.lower()) + ' ' for t in texts]
     return np.array([[' ' + s.replace('-', ' ') + ' ' in t for s in SHELVES] for t in norm], dtype=float)
 
-results['shelf name in text'] = scores(Y[te], keyword(elig['description'].iloc[te]), 0.5)
+KW_te = keyword(elig['description'].iloc[te])
+results['shelf name in text'] = scores(Y[te], KW_te, 0.5)
 
 # %% [markdown]
 # ### C. Text Representation
@@ -331,6 +422,7 @@ print(X_tr.shape, f'{X_tr.nnz / X_tr.shape[0]:.0f} nonzero features per book')
 # Same objective as sklearn's LogisticRegression(C=1, class_weight='balanced'), divided by n:
 # mean weighted log-loss + ||W||^2 / (2 C n). Mini-batches keep memory small on an 8 GB card.
 DEV = 'cuda' if torch.cuda.is_available() else 'cpu'
+torch.sparse.check_sparse_tensor_invariants.disable()  # explicit opt-out; checks cost time, our indices come from scipy
 
 
 def to_torch(x):
@@ -339,7 +431,7 @@ def to_torch(x):
     return torch.sparse_coo_tensor(i, torch.from_numpy(x.data), x.shape).to(DEV)
 
 
-def fit_lr(x, y, C=1.0, epochs=8, batch=4096, lr=0.01, seed=0):
+def fit_lr(x, y, x_va, y_va, C=1.0, epochs=8, batch=4096, lr=0.01, seed=0):
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
     n = len(y)
@@ -349,6 +441,8 @@ def fit_lr(x, y, C=1.0, epochs=8, batch=4096, lr=0.01, seed=0):
     W = torch.zeros(x.shape[1], y.shape[1], device=DEV, requires_grad=True)
     b = torch.zeros(y.shape[1], device=DEV, requires_grad=True)
     opt = torch.optim.Adam([W, b], lr=lr)
+    yv = torch.from_numpy(y_va)
+    hist = []
     for epoch in range(epochs):
         total = 0.0
         for idx in np.array_split(rng.permutation(n), max(n // batch, 1)):
@@ -361,8 +455,13 @@ def fit_lr(x, y, C=1.0, epochs=8, batch=4096, lr=0.01, seed=0):
             loss.backward()
             opt.step()
             total += loss.item() * len(idx)
-        print(f'epoch {epoch + 1}: loss {total / n:.4f}')
-    return W.detach(), b.detach()
+        # validation: same class weights, no penalty
+        val = torch.nn.functional.binary_cross_entropy_with_logits(
+            torch.from_numpy(decision(x_va, W.detach(), b.detach())), yv,
+            weight=yv * w_pos.cpu() + (1 - yv) * w_neg.cpu()).item()
+        hist.append((total / n, val))
+        print(f'epoch {epoch + 1}: train objective {total / n:.4f}, validation log-loss {val:.4f}')
+    return W.detach(), b.detach(), hist
 
 
 @torch.no_grad()
@@ -371,13 +470,28 @@ def decision(x, W, b, batch=8192):
     return np.vstack(out)
 
 
-W, b = fit_lr(X_tr, Y[tr])
+W, b, hist = fit_lr(X_tr, Y[tr], X_va, Y[va])
 S_va, S_te = decision(X_va, W, b), decision(X_te, W, b)
+
+# %% Fig. 5: loss per epoch
+h = np.array(hist)
+ep = np.arange(1, len(h) + 1)
+fig, ax = plt.subplots(figsize=(5, 3))
+ax.plot(ep, h[:, 0], color='#191919', linewidth=2, marker='o', markersize=4,
+        label='training objective (mean over epoch)')
+ax.plot(ep, h[:, 1], color='#666666', linewidth=2, linestyle='--', marker='o', markersize=4,
+        label='validation log-loss (end of epoch)')
+ax.set(xlabel='epoch', ylabel='weighted log-loss', xticks=ep)
+ax.legend(frameon=False)
+save(5)
+
+# %% [markdown]
+# *Fig. 5. Training objective, averaged over the mini-batches of each epoch and including the $L_2$ penalty, and weighted log-loss on the validation set at the end of each epoch.*
 
 # %% [markdown]
 # ### F. Convergence
 #
-# The training loss was still decreasing at the eighth epoch, so the model had not fully converged. In our group's earlier experiments, scikit-learn's solver fit the same objective to convergence and reached a test macro-F1 of 0.484, compared with 0.454 here. The results in Section V are therefore a slight underestimate of what this model can achieve, and the untuned optimizer settings are the most likely source of the difference.
+# The training loss was still decreasing at the eighth epoch (Fig. 5), so the model had not fully converged. In our group's earlier experiments, scikit-learn's solver fit the same objective to convergence and reached a test macro-F1 of 0.484, compared with 0.454 here. The results in Section V are therefore a slight underestimate of what this model can achieve, and the untuned optimizer settings are the most likely source of the difference.
 
 # %% [markdown]
 # ## V. Evaluation
@@ -385,13 +499,71 @@ S_va, S_te = decision(X_va, W, b), decision(X_te, W, b)
 # %% [markdown]
 # ### A. Overall Results
 #
-# The threshold of each shelf was selected on the validation set, and every model was evaluated once on the test set. The resulting scores are listed below.
+# The threshold of each shelf was selected on the validation set, and every model was evaluated once on the test set. To measure the contribution of the character features, the same model was also trained on the word features alone, with its own thresholds. The uncertainty of each score was estimated with 1,000 bootstrap resamples of the test set. Works were resampled instead of books, since editions of one work share a description and are not independent.
 
 # %% cutoffs: one per shelf, chosen on validation; the default is logit 0 (probability 0.5)
 cut = np.array([best_cutoff(Y[va][:, j], S_va[:, j]) for j in range(K)])
 results['model, cutoff 0'] = scores(Y[te], S_te, 0.0)
 results['model, cutoff per shelf'] = scores(Y[te], S_te, cut)
+
+# %% ablation: the same model on word features only, with its own validation cutoffs
+nw = len(word.vocabulary_)
+W_w, b_w, _ = fit_lr(X_tr[:, :nw], Y[tr], X_va[:, :nw], Y[va])
+S_va_w, S_te_w = decision(X_va[:, :nw], W_w, b_w), decision(X_te[:, :nw], W_w, b_w)
+cut_w = np.array([best_cutoff(Y[va][:, j], S_va_w[:, j]) for j in range(K)])
+results['model, words only'] = scores(Y[te], S_te_w, cut_w)
 pd.DataFrame(results).T.round(3)
+
+# %% bootstrap over test works: 95% intervals for macro-F1 and paired differences (cutoffs fixed)
+systems = {'label prior': np.zeros((len(te), K), bool), 'every shelf': np.ones((len(te), K), bool),
+           'shelf name in text': KW_te >= 0.5, 'model, cutoff 0': S_te >= 0.0,
+           'model, words only': S_te_w >= cut_w, 'model, cutoff per shelf': S_te >= cut}
+Yt = Y[te].astype(bool)
+g = pd.factorize(elig['group'].iloc[te])[0]
+G = csr_matrix((np.ones(len(te), np.float32), (g, np.arange(len(te)))))
+# per work and shelf: true positives, false positives, false negatives of every system
+counts = np.hstack([G @ np.hstack([Yt & p, ~Yt & p, Yt & ~p]).astype(np.float32) for p in systems.values()])
+
+
+def macro_f1(c):
+    c = c.reshape(*c.shape[:-1], len(systems), 3, K)
+    tp, fp, fn = c[..., 0, :], c[..., 1, :], c[..., 2, :]
+    den = 2 * tp + fp + fn
+    return np.where(den > 0, 2 * tp / np.maximum(den, 1), 0).mean(-1)
+
+
+point = macro_f1(counts.sum(0))
+for k, name in enumerate(systems):
+    assert np.isclose(point[k], results[name]['macro_f1'], atol=1e-6), name
+rng = np.random.default_rng(0)
+n_works = G.shape[0]
+boot = np.array([macro_f1(np.bincount(rng.integers(0, n_works, n_works), minlength=n_works) @ counts)
+                 for _ in range(1000)])
+names = list(systems)
+ci = pd.DataFrame({'macro_f1': point, 'low': np.percentile(boot, 2.5, 0), 'high': np.percentile(boot, 97.5, 0)},
+                  index=names)
+best = names.index('model, cutoff per shelf')
+for other in ['model, cutoff 0', 'shelf name in text', 'model, words only']:
+    diff = boot[:, best] - boot[:, names.index(other)]
+    ci.loc[f'difference: cutoff per shelf - {other}'] = [point[best] - point[names.index(other)],
+                                                         *np.percentile(diff, [2.5, 97.5])]
+print(f'{n_works} test works, 1000 resamples')
+ci.round(3)
+
+# %% Fig. 6: test macro-F1 with 95% bootstrap intervals
+c6 = ci.loc[names].sort_values('macro_f1')
+fig, ax = plt.subplots(figsize=(6, 2.8))
+ax.barh(c6.index, c6['macro_f1'], height=0.6,
+        color=['#257de0' if n == 'model, cutoff per shelf' else GRAY for n in c6.index],
+        xerr=[c6['macro_f1'] - c6['low'], c6['high'] - c6['macro_f1']], error_kw={'ecolor': '#191919', 'lw': 1})
+for i, v in enumerate(c6['macro_f1']):
+    ax.text(c6['high'].iloc[i] + 0.01, i, f'{v:.3f}', va='center')
+ax.set(xlabel='test macro-F1', xlim=(0, max(c6['high']) + 0.1))
+ax.grid(axis='y', visible=False)
+save(6)
+
+# %% [markdown]
+# *Fig. 6. Macro-F1 on the test set for each baseline and model. Error bars are 95% percentile intervals from 1,000 bootstrap resamples of test works, with the thresholds held fixed; they reflect sampling of the test set only, not variation between training runs.*
 
 # %% [markdown]
 # The description carries substantial information about a book's shelves, well beyond what a keyword rule extracts. The label prior scores zero, as expected. The keyword baseline reaches a macro-F1 of only 0.106, because reader-defined shelf names rarely occur in publisher descriptions; a book shelved as `contemporary` seldom describes itself as contemporary. The learned model reaches a macro-F1 of 0.454 and a micro-F1 of 0.480, more than four times the keyword baseline.
@@ -408,28 +580,116 @@ per_shelf = pd.DataFrame({
     'precision': precision_score(Y[te], P, average=None, zero_division=0),
     'recall': recall_score(Y[te], P, average=None, zero_division=0),
     'auc': [roc_auc_score(Y[te][:, j], S_te[:, j]) for j in range(K)],
+    'keyword_f1': f1_score(Y[te], KW_te >= 0.5, average=None, zero_division=0),
     'near_cutoff_ratio': near,
 }, index=SHELVES)
 per_shelf.sort_values('f1').round(3)
 
+# %% Fig. 7: per-shelf test F1 (this F1 order is used for every per-shelf figure below)
+order = per_shelf.sort_values('f1').index
+y = np.arange(K)
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.barh(y, per_shelf.loc[order, 'f1'], height=0.7, color=[color(s) for s in order], label='model')
+ax.scatter(per_shelf.loc[order, 'keyword_f1'], y, marker='D', s=20, color='#191919', label='keyword baseline')
+ax.set(yticks=y, yticklabels=order, xlabel='test F1', xlim=(0, 1))
+ax.grid(axis='y', visible=False)
+ax.legend(loc='lower right', frameon=False)
+save(7)
+
+# %% [markdown]
+# *Fig. 7. Test F1 of the model for each shelf (bars) and of the keyword baseline (diamonds), with shelves ordered by model F1.*
+
+# %% Fig. 8: precision-recall curves of the focus shelves; dot = threshold chosen on validation
+fig, ax = plt.subplots(figsize=(5, 4))
+for s in focus:
+    j = SHELVES.index(s)
+    prec, rec, _ = precision_recall_curve(Y[te][:, j], S_te[:, j])
+    ax.plot(rec, prec, color=FOCUS[s], linewidth=2, label=s)
+    ax.plot(per_shelf.loc[s, 'recall'], per_shelf.loc[s, 'precision'], 'o', markersize=8, color=FOCUS[s],
+            markeredgecolor='white', markeredgewidth=2)
+ax.set(xlabel='recall', ylabel='precision', xlim=(0, 1), ylim=(0, 1.02))
+ax.legend(frameon=False)
+save(8)
+
+# %% [markdown]
+# *Fig. 8. Precision-recall curves on the test set for the three focus shelves. The dot on each curve marks the precision and recall at the threshold selected on the validation set.*
+
 # %% [markdown]
 # ### B. Per-Shelf Results
 #
-# The average conceals large differences between shelves. `manga` reaches an F1 of 0.812, with a precision of 0.86 and a recall of 0.77. `historical-romance` (0.685) and `m-m` (0.627) also perform well. At the other extreme, `contemporary` reaches an F1 of 0.244 with a precision of 0.19, and `contemporary-romance` reaches 0.279. These two shelves also have the lowest AUC (0.834 and 0.859). A low AUC indicates that the model fails to separate their books from the rest even in its ranking, so no choice of threshold can correct them.
+# The average conceals large differences between shelves (Fig. 7). `manga` reaches an F1 of 0.812, with a precision of 0.86 and a recall of 0.77. `historical-romance` (0.685) and `m-m` (0.627) also perform well. At the other extreme, `contemporary` reaches an F1 of 0.244 with a precision of 0.19, and `contemporary-romance` reaches 0.279. These two shelves also have the lowest AUC (0.834 and 0.859). A low AUC indicates that the model fails to separate their books from the rest even in its ranking, so no choice of threshold can correct them (Fig. 8).
 #
 # The per-shelf results thus give a qualified answer to the research question. For shelves with a distinctive vocabulary, the description predicts the shelf with useful precision and recall; for shelves such as `contemporary`, it largely does not. The next analysis examines the cause.
 
 # %% does label noise or label count explain per-shelf F1?
-rho_noise = spearmanr(per_shelf['near_cutoff_ratio'], per_shelf['f1'])[0]
-rho_count = spearmanr(per_shelf['test_positives'], per_shelf['f1'])[0]
-print(f'rank correlation with F1: near-cutoff ratio {rho_noise:+.2f}, test positives {rho_count:+.2f}')
+rho_noise, p_noise = spearmanr(per_shelf['near_cutoff_ratio'], per_shelf['f1'])
+rho_count, p_count = spearmanr(per_shelf['test_positives'], per_shelf['f1'])
+print(f'Spearman with F1 (n = {K} shelves): near-cutoff ratio {rho_noise:+.2f} (p = {p_noise:.3f}), '
+      f'test positives {rho_count:+.2f} (p = {p_count:.3f})')
+# other lower edges of the band, to check that the result does not depend on the 5% choice
+for lo in (0.025, 0.05, 0.075):
+    r = ((share[tr] >= lo) & (share[tr] < MIN_FRAC)).sum(0) / Y[tr].sum(0)
+    rho, p = spearmanr(r, per_shelf['f1'])
+    print(f'band {lo:.1%} to {MIN_FRAC:.0%}: rho {rho:+.2f} (p = {p:.3f})')
+
+# %% Fig. 9: per-shelf F1 against label noise and against label count
+fig, axes = plt.subplots(1, 2, figsize=(8, 3.5), sharey=True)
+for ax, col, xlabel, rho in [(axes[0], 'near_cutoff_ratio', 'near-cutoff ratio (log scale)', rho_noise),
+                             (axes[1], 'test_positives', 'positive test books (log scale)', rho_count)]:
+    ax.scatter(per_shelf[col], per_shelf['f1'], s=40, c=[color(s) for s in SHELVES],
+               edgecolors='white', linewidths=1.5, zorder=3)
+    for s in focus:  # labels on all 15 collide; the per-shelf table gives the rest
+        ax.annotate(s, (per_shelf.loc[s, col], per_shelf.loc[s, 'f1']), xytext=(5, 3), textcoords='offset points')
+    ax.set(xscale='log', xlabel=xlabel, title=f'Spearman rho = {rho:+.2f}')
+    ax.minorticks_off()
+    ax.xaxis.set_major_locator(plt.LogLocator(subs=(1, 2, 5)))
+    ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%g'))
+axes[0].set_ylabel('test F1')
+save(9)
+
+# %% [markdown]
+# *Fig. 9. Test F1 of each shelf against its near-cutoff ratio (left) and against its number of positive test books (right), both on logarithmic axes. Each point is one shelf, and the three focus shelves are labeled; the panel titles give Spearman's rank correlation over the 15 shelves.*
 
 # %% [markdown]
 # ### C. Label Noise and Performance
 #
-# The hypothesis of Section III-D was tested by comparing each shelf's label-noise ratio with its test F1. Spearman's rank correlation was used because only 15 shelves are available, the ratio is heavily skewed (from 0.03 to 5.51), and the question is whether noisier shelves score lower, irrespective of the functional form of the relationship. The correlation is $\rho = -0.82$: the shelves on which readers disagree most are those the model predicts worst. The number of positive test books is only weakly related to F1 ($\rho = +0.23$), so the weak shelves are not weak merely because they are small. For example, `contemporary` and `historical` have a similar number of positive test books (1,833 and 2,307), yet their F1 scores are 0.244 and 0.525.
+# The hypothesis of Section III-D was tested by comparing each shelf's label-noise ratio with its test F1 (Fig. 9). Spearman's rank correlation was used because only 15 shelves are available, the ratio is heavily skewed (from 0.03 to 5.51), and the question is whether noisier shelves score lower, irrespective of the functional form of the relationship. The correlation is $\rho = -0.82$: the shelves on which readers disagree most are those the model predicts worst. The number of positive test books is only weakly related to F1 ($\rho = +0.23$), so the weak shelves are not weak merely because they are small. For example, `contemporary` and `historical` have a similar number of positive test books (1,833 and 2,307), yet their F1 scores are 0.244 and 0.525.
 #
 # These results suggest that the performance ceiling on these shelves is set mainly by the labels. If readers do not agree on whether a book is `contemporary`, a classifier trained to reproduce their votes inherits that disagreement. With 15 shelves, the correlation is suggestive rather than conclusive, and it does not exclude other explanations, such as the absence of a distinctive vocabulary discussed next.
+#
+# A direct test of the hypothesis rescored each shelf after removing the test books whose share for that shelf lies just below the threshold, between 5% and 10%. All of these books are negatives, so their removal raises precision by construction, even if the books are no harder than other negatives. As a control, the same number of randomly chosen negatives outside the band was removed instead, 20 times per shelf. The effect of the band is the difference between the two scores.
+
+# %% clean-label check: drop test books in the 5-10% band of a shelf, versus dropping as many random negatives
+band = (share[te] >= 0.05) & (share[te] < MIN_FRAC)
+rng = np.random.default_rng(0)
+rows = []
+for j, s in enumerate(SHELVES):
+    neg = np.flatnonzero(~Yt[:, j] & ~band[:, j])
+    control = []
+    for _ in range(20):
+        keep = np.ones(len(te), bool)
+        keep[rng.choice(neg, band[:, j].sum(), replace=False)] = False
+        control.append(f1_score(Yt[keep, j], P[keep, j], zero_division=0))
+    rows.append({'band_books': band[:, j].sum(), 'f1_all': per_shelf.loc[s, 'f1'],
+                 'f1_random_negatives_dropped': np.mean(control),
+                 'f1_band_dropped': f1_score(Yt[~band[:, j], j], P[~band[:, j], j], zero_division=0)})
+clean = pd.DataFrame(rows, index=SHELVES)
+clean['band_effect'] = clean['f1_band_dropped'] - clean['f1_random_negatives_dropped']
+clean.loc[order].round(3)
+
+# %% Fig. 10: clean-label check per shelf
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.scatter(clean.loc[order, 'f1_all'], y, s=40, facecolors='none', edgecolors='#666666', label='all test books')
+ax.scatter(clean.loc[order, 'f1_random_negatives_dropped'], y, s=40, marker='x', color='#666666',
+           label='random negatives dropped')
+ax.scatter(clean.loc[order, 'f1_band_dropped'], y, s=40, color='#191919', label='5-10% band dropped')
+ax.set(yticks=y, yticklabels=order, xlabel='test F1', xlim=(0, 1))
+ax.grid(axis='y', visible=False)
+ax.legend(loc='lower right', frameon=False)
+save(10)
+
+# %% [markdown]
+# *Fig. 10. Test F1 per shelf on all test books (circles), after removing a random set of negatives (crosses), and after removing the negatives in the 5% to 10% band of the shelf (dots). Both removals drop the same number of books. Shelves are ordered as in Fig. 7.*
 
 # %% strongest features per shelf
 Wn = W.cpu().numpy()
@@ -442,6 +702,24 @@ print(top.to_string(header=False))
 # The output above lists the eight terms with the largest positive weight for each shelf. For the well-predicted shelves, these are the terms a human reader would expect: `historical-romance` relies on *lady*, *earl*, *lord*, and *duke*; `bdsm` on *dom*, *master*, and *submissive*; `manga` on the word *manga* and fragments of Japanese names; and `m-m` on *gay* and male pronouns. The model therefore bases its predictions for these shelves on genre evidence, which supports their validity.
 #
 # For `contemporary` and `contemporary-romance`, the strongest terms are names of particular series and places, such as *Virgin River*, *Idaho*, and *Lucky Harbor*. We hypothesize that contemporary romance has little vocabulary of its own, because it is defined mainly by the absence of other markers, namely a present-day setting without historical or supernatural elements. The weights are consistent with this hypothesis, since the model's strongest evidence for these shelves consists of popular series, which cannot generalize to a standalone novel; the hypothesis was not tested directly. A few character-level features, such as single punctuation marks, also rank among the top terms. They may reflect the formatting conventions of particular publishers, which was not verified.
+
+# %% most confident errors: 10 false positives and 10 false negatives, all shelves pooled
+margin = S_te - cut
+info = elig.iloc[te].reset_index(drop=True)
+
+
+def errors(mask, sign):
+    i, j = np.nonzero(mask)
+    k = np.argsort(sign * margin[i, j])[:10]
+    return pd.DataFrame({'shelf': np.array(SHELVES)[j[k]], 'vote_share': share[te][i[k], j[k]].round(3),
+                         'content_votes': info['sh_votes'].iloc[i[k]].values,
+                         'margin': margin[i[k], j[k]].round(2), 'title': info['title'].iloc[i[k]].values,
+                         'description': info['description'].iloc[i[k]].str.replace(r'\s+', ' ', regex=True).str.slice(0, 150).values})
+
+
+with pd.option_context('display.max_colwidth', 150, 'display.width', 250):
+    print('false positives\n', errors(~Yt & P, -1).to_string(index=False))
+    print('\nfalse negatives\n', errors(Yt & ~P, 1).to_string(index=False))
 
 # %% [markdown]
 # ### E. Error Analysis

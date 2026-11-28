@@ -3,3 +3,5 @@ __pycache__/
 PLAN.md
 secret.env
 scripts/
+slides/
+.gitignore
